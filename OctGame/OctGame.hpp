@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 #include "ImageManager.hpp"
-#include "Object.hpp"
 
 using namespace std;
 

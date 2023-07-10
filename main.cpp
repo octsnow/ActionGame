@@ -5,6 +5,8 @@
 #include <time.h>
 #include <windows.h>
 #include "OctGame/OctGame.hpp"
+#include "Object.hpp"
+#include "Character.hpp"
 
 #pragma comment(lib, "opencv_world455.lib")
 
@@ -98,21 +100,22 @@ bool checkHitBox( int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2
 }
 
 int checkGroundHead(bool isGround){
-    int const& pW = gPlayer.width;
-    int const& pH = gPlayer.height;
-    int const  leftPx = gPlayer.position.x;
-    int const  rightPx = gPlayer.position.x + pW - 1;
+    const int pW = gPlayer.getWidth();
+    const int pH = gPlayer.getHeight();
+    Vector2d pPos = gPlayer.getPosition();
+    int const  leftPx = pPos.x;
+    int const  rightPx = pPos.x + pW - 1;
     int groundY = -1;
     int leftBlkX, rightBlkX, checkBlkY, offset;
 
-    if( gPlayer.position.y + pH >= SCREEN_H ){
+    if(pPos.y + pH >= SCREEN_H){
         return SCREEN_H - pH;
     }
 
-    if( isGround ){
-        checkBlkY = ( gPlayer.position.y + pH ) / BLOCK_SIZE;
+    if(isGround){
+        checkBlkY = (pPos.y + pH) / BLOCK_SIZE;
     }else{
-        checkBlkY = ( gPlayer.position.y - 1 ) / BLOCK_SIZE;
+        checkBlkY = (pPos.y - 1 ) / BLOCK_SIZE;
     }
 
     offset = checkBlkY * STAGE_W;
@@ -120,13 +123,13 @@ int checkGroundHead(bool isGround){
     leftBlkX = leftPx / BLOCK_SIZE;
     rightBlkX = rightPx / BLOCK_SIZE;
 
-    for( int i = leftBlkX; i <= rightBlkX; i++ ){
+    for(int i = leftBlkX; i <= rightBlkX; i++) {
         int index = offset + i;
-        if( index < 0 || index >= STAGE_W * STAGE_H ) continue;
-        if(0 < gStage[index] && gStage[index] < 3){
-            if( isGround ){
+        if(index < 0 || index >= STAGE_W * STAGE_H) continue;
+        if(0 < gStage[index] && gStage[index] < 3) {
+            if(isGround) {
                 groundY = checkBlkY * BLOCK_SIZE - pH;
-            }else{
+            } else {
                 groundY = checkBlkY * BLOCK_SIZE + BLOCK_SIZE;
             }
             break;
@@ -137,29 +140,30 @@ int checkGroundHead(bool isGround){
 }
 
 int checkWall(bool isRight){
-    int const& pW = gPlayer.width;
-    int const& pH = gPlayer.height;
-    int const  topPy = gPlayer.position.y;
-    int const  bottomPy = gPlayer.position.y + pH - 1;
+    const int pW = gPlayer.getWidth();
+    const int pH = gPlayer.getHeight();
+    const Vector2d pPos = gPlayer.getPosition();
+    int const  topPy = pPos.y;
+    int const  bottomPy = pPos.y + pH - 1;
     int WallX = -1;
     int topBlkY, bottomBlkY, checkBlkX;
-    if( isRight ){
-        checkBlkX = ( gPlayer.position.x + pW ) / BLOCK_SIZE;
-    }else{
-        checkBlkX = ( gPlayer.position.x - 1 ) / BLOCK_SIZE;
+    if(isRight) {
+        checkBlkX = (pPos.x + pW) / BLOCK_SIZE;
+    } else {
+        checkBlkX = (pPos.x - 1) / BLOCK_SIZE;
     }
 
     topBlkY = topPy / BLOCK_SIZE;
     bottomBlkY = bottomPy / BLOCK_SIZE;
 
-    for( int i = topBlkY; i <= bottomBlkY; i++ ){
+    for(int i = topBlkY; i <= bottomBlkY; i++) {
         int index = i * STAGE_W + checkBlkX;
-        if( index < 0 || index >= STAGE_W * STAGE_H ) continue;
-        if( 0 < gStage[index] && gStage[index] < 3 ){
-            if( isRight ){
+        if(index < 0 || index >= STAGE_W * STAGE_H) continue;
+        if(0 < gStage[index] && gStage[index] < 3){
+            if(isRight) {
                 WallX = checkBlkX * BLOCK_SIZE - pW;
-            }else{
-                WallX = ( checkBlkX + 1 ) * BLOCK_SIZE;
+            } else {
+                WallX = (checkBlkX + 1) * BLOCK_SIZE;
             }
         }
     }
@@ -174,25 +178,27 @@ vector<ObjNode**> checkHitObject() {
             Object* object = &(*node)->obj;
             double x1, x2, y1, y2;
             int width, height;
+            Vector2d pPos = gPlayer.getPosition();
+            Vector2d oPos = object->getPosition();
 
-            if(object->position.x < gPlayer.position.x) {
-                x1 = object->position.x;
-                x2 = gPlayer.position.x;
-                width = object->width;
+            if(oPos.x < pPos.x) {
+                x1 = oPos.x;
+                x2 = pPos.x;
+                width = object->getWidth();
             } else {
-                x1 = gPlayer.position.x;
-                x2 = object->position.x;
-                width = gPlayer.width;
+                x1 = pPos.x;
+                x2 = oPos.x;
+                width = gPlayer.getWidth();
             }
 
-            if(object->position.y < gPlayer.position.y) {
-                y1 = object->position.y;
-                y2 = gPlayer.position.y;
-                height = object->height;
+            if(oPos.y < pPos.y) {
+                y1 = oPos.y;
+                y2 = pPos.y;
+                height = object->getHeight();
             } else {
-                y1 = gPlayer.position.y;
-                y2 = object->position.y;
-                height = gPlayer.height;
+                y1 = pPos.y;
+                y2 = oPos.y;
+                height = gPlayer.getHeight();
             }
 
             if(x2 - x1 < width && y2 - y1 < height) {
@@ -208,101 +214,116 @@ vector<ObjNode**> checkHitObject() {
 void drawStage(){
     int scwHlf = SCREEN_W / 2;
     int schHlf = SCREEN_H / 2;
-    int offX = gPlayer.position.x > scwHlf ? ( gPlayer.position.x < STAGE_W * BLOCK_SIZE - scwHlf ? gPlayer.position.x - scwHlf : STAGE_W * BLOCK_SIZE - SCREEN_W ) : 0;
-    for( int y = 0; y < STAGE_H && y < SCREEN_H / BLOCK_SIZE + 1; y++ ){
-        for( int x = 0; x < STAGE_W && x < SCREEN_W / BLOCK_SIZE + 1; x++ ){
+    Vector2d pPos = gPlayer.getPosition();
+    int offX = pPos.x > scwHlf ? (pPos.x < STAGE_W * BLOCK_SIZE - scwHlf ? pPos.x - scwHlf : STAGE_W * BLOCK_SIZE - SCREEN_W) : 0;
+    for(int y = 0; y < STAGE_H && y < SCREEN_H / BLOCK_SIZE + 1; y++){
+        for(int x = 0; x < STAGE_W && x < SCREEN_W / BLOCK_SIZE + 1; x++){
             int x1 = x * BLOCK_SIZE - offX % BLOCK_SIZE,
                 y1 = y * BLOCK_SIZE,
-                x2 = ( x + 1 ) * BLOCK_SIZE - offX % BLOCK_SIZE,
-                y2 = ( y + 1 ) * BLOCK_SIZE;
+                x2 = (x + 1) * BLOCK_SIZE - offX % BLOCK_SIZE,
+                y2 = (y + 1) * BLOCK_SIZE;
             int idx = y * STAGE_W + x + offX / BLOCK_SIZE;
 
-            if( idx < 0 || STAGE_W * STAGE_H <= idx ) continue;
-            switch( gStage[ idx ] ){
+            if(idx < 0 || STAGE_W * STAGE_H <= idx) continue;
+            switch(gStage[idx]){
             case 1:
                 game.drawImage(gGlassBlock, x1, y1);
-                //game.drawBox( x1, y1, x2, y2, 0xFF0000 );
+                //game.drawBox(x1, y1, x2, y2, 0xFF0000);
                 break;
             case 2:
-                game.drawBox( x1, y1, x2, y2, 0xFFFF00 );
+                game.drawBox(x1, y1, x2, y2, 0xFFFF00);
                 break;
             }
         }
     }
 }
 
-void update(){
+void update() {
     bool isMove = false;
     int groundY = -1, wallX = -1;
+    Vector2d pPos, pVec;
     
-    if( gGameInf.ks.a ){
-        gPlayer.vector.x--;
-        if( gPlayer.vector.x < -MAX_SPEED_X )   gPlayer.vector.x = -MAX_SPEED_X;
+    if(gGameInf.ks.a) {
+        gPlayer.addVector(-1, 0);
+        if(gPlayer.getVector().x < -MAX_SPEED_X) {
+            gPlayer.setVector(-MAX_SPEED_X, gPlayer.getVector().y);
+        }
         isMove = true;
     }
-    if( gGameInf.ks.d ){
-        gPlayer.vector.x++;
-        if( gPlayer.vector.x >  MAX_SPEED_X )   gPlayer.vector.x =  MAX_SPEED_X;
+    if(gGameInf.ks.d) {
+        gPlayer.addVector(1, 0);
+        if(gPlayer.getVector().x > MAX_SPEED_X) {
+            gPlayer.setVector(MAX_SPEED_X, gPlayer.getVector().y);
+        }
         isMove = true;
     }
 
-    if( gGameInf.ks.space && gGameInf.isGround ){
-        gPlayer.vector.y -= JUNP_SPEED;
+    if(gGameInf.ks.space && gGameInf.isGround) {
+        gPlayer.setVector(gPlayer.getVector().x, -JUNP_SPEED);
     }
 
-    if( gPlayer.vector.y != 0 ){
-        double tmpY = gPlayer.position.y;
-        gPlayer.position.y += gPlayer.vector.y;
-        groundY = checkGroundHead( gPlayer.vector.y > 0 );
-        gPlayer.position.y = tmpY;
+    if(gPlayer.getVector().y != 0) {
+        Vector2d tmpPos = gPlayer.getPosition();
+        Vector2d pVec = gPlayer.getVector();
+        gPlayer.translate(0, pVec.y);
+        groundY = checkGroundHead(pVec.y > 0);
+        cout << (pVec.y > 0 ? "true" : "false") << endl;
+        gPlayer.setPosition(gPlayer.getPosition().x, tmpPos.y);
     }
-    if( gPlayer.vector.x != 0 ){
-        double tmpX = gPlayer.position.x;
-        gPlayer.position.x += gPlayer.vector.x;
-        wallX = checkWall( gPlayer.vector.x > 0 );
-        gPlayer.position.x = tmpX;
+    if(gPlayer.getVector().x != 0) {
+        Vector2d tmpPos = gPlayer.getPosition();
+        Vector2d pVec = gPlayer.getVector();
+        gPlayer.translate(pVec.x, 0);
+        wallX = checkWall(pVec.x > 0);
+        gPlayer.setPosition(tmpPos.x, gPlayer.getPosition().y);
     }
 
-    if( groundY >= 0 ){
-        gGameInf.isGround = gPlayer.vector.y > 0;
-        gPlayer.vector.y  = 0;
-        gPlayer.position.y = groundY;
-    }else{
+    pVec = gPlayer.getVector();
+    cout << "pVec=(" << pVec.x << ", " << pVec.y << ")" << endl;
+    if(groundY >= 0) {
+        gGameInf.isGround = gPlayer.getVector().y > 0;
+        gPlayer.setVector(gPlayer.getVector().x, 0);
+        gPlayer.setPosition(gPlayer.getPosition().x, groundY);
+    } else {
         gGameInf.isGround = false;
     }
 
-    if( !isMove ){
-        gPlayer.vector.x -= gPlayer.vector.x != 0 ? ( (int)( gPlayer.vector.x > 0 ) * 2 - 1 ) : 0;
+    if(!isMove) {
+        gPlayer.addVector(-(gPlayer.getVector().x != 0 ? ((int)(gPlayer.getVector().x > 0) * 2 - 1) : 0), 0);
     }
 
-    if( wallX >= 0 ){
-        gPlayer.vector.x = 0;
-        gPlayer.position.x = wallX;
+    if(wallX >= 0) {
+        gPlayer.setVector(0, gPlayer.getVector().y);
+        gPlayer.setPosition(wallX, gPlayer.getPosition().y);
     }
 
-    gPlayer.position.x += gPlayer.vector.x;
-    gPlayer.position.y += gPlayer.vector.y;
+    pVec = gPlayer.getVector();
+    cout << "vec=(" << pVec.x << ", " << pVec.y << ")" << endl;
+    gPlayer.translate(pVec.x, pVec.y);
 
     drawStage();
 
-    int screenX = gPlayer.position.x < SCREEN_W / 2 ? 0 : ( gPlayer.position.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? STAGE_W * BLOCK_SIZE - SCREEN_W : gPlayer.position.x - SCREEN_W / 2);
+    pPos = gPlayer.getPosition();
+    int screenX = pPos.x < SCREEN_W / 2 ? 0 : (pPos.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? STAGE_W * BLOCK_SIZE - SCREEN_W : pPos.x - SCREEN_W / 2);
     game.drawImage(
-        gPlayer.imageHandle,
-//        gPlayer.x < SCREEN_W / 2 ? gPlayer.x : ( gPlayer.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? gPlayer.x - STAGE_W * BLOCK_SIZE + SCREEN_W : SCREEN_W / 2),
-        gPlayer.position.x - screenX,
-        gPlayer.position.y );
+        gPlayer.getImageHandle(),
+        pPos.x - screenX, pPos.y );
     for(ObjNode* node = objList; node != nullptr; node = node->nextObj) {
+        Vector2d oPos = node->obj.getPosition();
         game.drawImage(
-            node->obj.imageHandle,
-            node->obj.position.x - screenX, node->obj.position.y
+            node->obj.getImageHandle(),
+            oPos.x - screenX, oPos.y
         );
     }
-    gPlayer.vector.y += GRAVITY;
-    if( gPlayer.vector.y > MAX_SPEED_Y )   gPlayer.vector.y =  MAX_SPEED_Y;
+    gPlayer.addVector(0, GRAVITY);
+    pVec = gPlayer.getVector();
+    if(pVec.y > MAX_SPEED_Y) {
+        gPlayer.setVector(pVec.x, MAX_SPEED_Y);
+    }
 
     vector<ObjNode**> hits = checkHitObject();
     for(ObjNode** o : hits) {
-        if((*o)->obj.imageHandle == g1yenImgHandle) {
+        if((*o)->obj.getImageHandle() == g1yenImgHandle) {
             gGameInf.money++;
 
             ObjNode* node = *o;
@@ -316,60 +337,59 @@ void update(){
     game.text(0, 0, str);
 }
 
-void idle(){
+void idle() {
     glutPostRedisplay();
 }
 
-void display(){
-    glClear( GL_COLOR_BUFFER_BIT );
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    if( gSysInf.countTime >= FrameTime ){
+    if(gSysInf.countTime >= FrameTime) {
         game.clearScreen();
         update();
         gSysInf.countTime -= FrameTime;
     }
-    gSysInf.countTime += time( NULL );
+    gSysInf.countTime += time(NULL);
 
     game.screenSwap();
 }
 
-void resize( int w, int h ){
-    glViewport( 0, 0, w, h );
+void resize(int w, int h) {
+    glViewport(0, 0, w, h);
 
-    glMatrixMode( GL_PROJECTION );
+    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective( 30.0, (double)w / (double)h, 1.0, 100.0 );
+    gluPerspective(30.0, (double)w / (double)h, 1.0, 100.0);
     
-    glMatrixMode( GL_MODELVIEW );
+    glMatrixMode(GL_MODELVIEW);
 }
 
-void init(){
-    glClearColor( 0.0, 0.0, 1.0, 0.0 );
+void init() {
+    glClearColor(0.0, 0.0, 1.0, 0.0);
 
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-    glEnable( GL_BLEND );
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
 }
 
-void key( unsigned char key, int x, int y ){
-    switch( key ){
+void key(unsigned char key, int x, int y) {
+    switch(key) {
     case 'a': gGameInf.ks.a = true; break;
     case 'd': gGameInf.ks.d = true; break;
     case ' ': gGameInf.ks.space = true; break;
     }
 }
 
-void keyUp( unsigned char key, int x, int y ){
-    switch( key ){
+void keyUp(unsigned char key, int x, int y) {
+    switch(key) {
     case 'a': case 'A': gGameInf.ks.a = false; break;
     case 'd': case 'D': gGameInf.ks.d = false; break;
     case ' ': gGameInf.ks.space = false; break;
     }
 }
 
-int main( int argc, char** argv ){
-  gPlayer.imageHandle = game.loadImage("images/player.bmp");
-  gPlayer.height = 100;
-  gPlayer.width = 50;
+int main(int argc, char** argv) {
+  gPlayer.setImageHandle(game.loadImage("images/player.bmp"));
+  gPlayer.setSize(50, 100);
 
   g1yenImgHandle = game.loadImage("images/1-yen.png", BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f);
 
@@ -386,7 +406,12 @@ int main( int argc, char** argv ){
   game.keyboardFunc(key);
   game.keyboardUpFunc(keyUp);
 
-  objList = new ObjNode({g1yenImgHandle, 50, 50, 50, 0, {0, 0}});
+  Object oneYen;
+  oneYen.setImageHandle(g1yenImgHandle);
+  oneYen.setSize(50, 50);
+  oneYen.setPosition(50, 0);
+
+  objList = new ObjNode(oneYen);
 
   init();
 

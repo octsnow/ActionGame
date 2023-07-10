@@ -7,3 +7,4 @@ public:
 
 private:
     int x, y;
+};
