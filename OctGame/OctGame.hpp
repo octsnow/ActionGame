@@ -23,7 +23,7 @@ public:
     int loadRegionImage(string filepath, float sx, float sy, int width, int height, int n, bool isBmp=false);
     void drawBox(int x1, int y1, int x2, int y2, int color);
     void drawImage(int handle, int dX, int dY, bool transpose=false);
-    void text(int x, int y, char* str);
+    void text(int x, int y, char* format, ...);
     void clearScreen();
     void screenSwap();
 

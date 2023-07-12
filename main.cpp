@@ -5,6 +5,7 @@
 #include <time.h>
 #include <windows.h>
 #include "OctGame/OctGame.hpp"
+#include "Util.hpp"
 #include "Object.hpp"
 #include "Character.hpp"
 
@@ -45,6 +46,7 @@ struct {
     unsigned int money = 0;
 } gGameInf;
 
+/*
 class ObjNode {
 public:
     ObjNode(Object obj): obj(obj) {}
@@ -52,12 +54,13 @@ public:
     Object obj;
     ObjNode* nextObj = nullptr;
 };
+*/
 
 int g1yenImgHandle;
 int gGlassBlock;
 Object gPlayer;
 Game game;
-ObjNode* objList = nullptr;
+LinkedList<Object> objList;
 
 int gStage[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -171,11 +174,11 @@ int checkWall(bool isRight){
     return WallX;
 }
 
-vector<ObjNode**> checkHitObject() {
-	vector<ObjNode**> result;
+vector<LinkedNode<Object>**> checkHitObject() {
+    vector<LinkedNode<Object>**> result;
 
-	for(ObjNode** node = &objList; *node != nullptr; node = &(*node)->nextObj) {
-            Object* object = &(*node)->obj;
+    objList.for_each([&](LinkedNode<Object>** node) {
+            Object* object = &(*node)->m_value;
             double x1, x2, y1, y2;
             int width, height;
             Vector2d pPos = gPlayer.getPosition();
@@ -204,12 +207,10 @@ vector<ObjNode**> checkHitObject() {
             if(x2 - x1 < width && y2 - y1 < height) {
                 result.push_back(node);
             }
-	}
+    });
 
-	return result;
+    return result;
 }
-
-
 
 void drawStage(){
     int scwHlf = SCREEN_W / 2;
@@ -228,7 +229,6 @@ void drawStage(){
             switch(gStage[idx]){
             case 1:
                 game.drawImage(gGlassBlock, x1, y1);
-                //game.drawBox(x1, y1, x2, y2, 0xFF0000);
                 break;
             case 2:
                 game.drawBox(x1, y1, x2, y2, 0xFFFF00);
@@ -267,7 +267,6 @@ void update() {
         Vector2d pVec = gPlayer.getVector();
         gPlayer.translate(0, pVec.y);
         groundY = checkGroundHead(pVec.y > 0);
-        cout << (pVec.y > 0 ? "true" : "false") << endl;
         gPlayer.setPosition(gPlayer.getPosition().x, tmpPos.y);
     }
     if(gPlayer.getVector().x != 0) {
@@ -279,7 +278,6 @@ void update() {
     }
 
     pVec = gPlayer.getVector();
-    cout << "pVec=(" << pVec.x << ", " << pVec.y << ")" << endl;
     if(groundY >= 0) {
         gGameInf.isGround = gPlayer.getVector().y > 0;
         gPlayer.setVector(gPlayer.getVector().x, 0);
@@ -298,7 +296,6 @@ void update() {
     }
 
     pVec = gPlayer.getVector();
-    cout << "vec=(" << pVec.x << ", " << pVec.y << ")" << endl;
     gPlayer.translate(pVec.x, pVec.y);
 
     drawStage();
@@ -308,33 +305,30 @@ void update() {
     game.drawImage(
         gPlayer.getImageHandle(),
         pPos.x - screenX, pPos.y );
-    for(ObjNode* node = objList; node != nullptr; node = node->nextObj) {
-        Vector2d oPos = node->obj.getPosition();
+    
+    objList.for_each([&](auto node) {
+        Vector2d oPos = (*node)->m_value.getPosition();
         game.drawImage(
-            node->obj.getImageHandle(),
+            (*node)->m_value.getImageHandle(),
             oPos.x - screenX, oPos.y
         );
-    }
+    });
+
     gPlayer.addVector(0, GRAVITY);
     pVec = gPlayer.getVector();
     if(pVec.y > MAX_SPEED_Y) {
         gPlayer.setVector(pVec.x, MAX_SPEED_Y);
     }
-
-    vector<ObjNode**> hits = checkHitObject();
-    for(ObjNode** o : hits) {
-        if((*o)->obj.getImageHandle() == g1yenImgHandle) {
+    vector<LinkedNode<Object>**> hits = checkHitObject();
+    for(auto o : hits) {
+        if((*o)->m_value.getImageHandle() == g1yenImgHandle) {
             gGameInf.money++;
 
-            ObjNode* node = *o;
-            *o = node->nextObj;
-            delete node;
+            objList.remove(o);
         }
     }
 
-    char str[256];
-    sprintf_s(str, 256, "%d coin", gGameInf.money);
-    game.text(0, 0, str);
+    game.text(0, 0, "%d coin", gGameInf.money);
 }
 
 void idle() {
@@ -411,19 +405,13 @@ int main(int argc, char** argv) {
   oneYen.setSize(50, 50);
   oneYen.setPosition(50, 0);
 
-  objList = new ObjNode(oneYen);
+  objList.append(oneYen);
 
   init();
 
   glutMainLoop();
 
   game.destroy();
-
-  while(objList != nullptr) {
-      ObjNode* node = objList;
-      objList = objList->nextObj;
-      delete node;
-  }
 
   return 0;
 }

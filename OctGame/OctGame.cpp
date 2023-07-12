@@ -1,4 +1,5 @@
 #include "OctGame.hpp"
+#include <stdarg.h>
 
 void Game::init(int* argc, char** argv, int width, int height) {
     this->m_width = width;
@@ -131,8 +132,14 @@ void Game::drawImage(int handle, int dX, int dY, bool transpose){
     }
 }
 
-void Game::text(int x, int y, char* str) {
-    TextOut(this->m_hDC, 0, 0, str, lstrlen(str));
+void Game::text(int x, int y, char* format, ...) {
+    char buf[256];
+    va_list ap;
+    va_start(ap, format);
+    vsprintf_s(buf, 256, format, ap);
+    va_end(ap);
+
+    TextOut(this->m_hDC, 0, 0, buf, lstrlen(buf));
 }
 
 void Game::clearScreen(){
