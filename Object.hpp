@@ -23,6 +23,7 @@ public:
     void addVector(double x, double y);
     Vector2d getVector();
 
+    void update() {}
 private:
     int m_imageHandle;
     int m_width, m_height;

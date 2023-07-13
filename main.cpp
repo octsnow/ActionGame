@@ -7,6 +7,7 @@
 #include "OctGame/OctGame.hpp"
 #include "Util.hpp"
 #include "Object.hpp"
+#include "Player.hpp"
 #include "Character.hpp"
 
 #pragma comment(lib, "opencv_world455.lib")
@@ -46,19 +47,9 @@ struct {
     unsigned int money = 0;
 } gGameInf;
 
-/*
-class ObjNode {
-public:
-    ObjNode(Object obj): obj(obj) {}
-
-    Object obj;
-    ObjNode* nextObj = nullptr;
-};
-*/
-
 int g1yenImgHandle;
 int gGlassBlock;
-Object gPlayer;
+Player gPlayer;
 Game game;
 LinkedList<Object> objList;
 
@@ -328,6 +319,7 @@ void update() {
         }
     }
 
+    gPlayer.update();
     game.text(0, 0, "%d coin", gGameInf.money);
 }
 
