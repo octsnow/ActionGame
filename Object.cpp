@@ -61,3 +61,7 @@ void Object::addVector(double x, double y) {
 Vector2d Object::getVector() {
     return this->m_vector;
 }
+
+void Object::setGravity(double g) {
+    this->m_gravity = g;
+}

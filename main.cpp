@@ -23,7 +23,7 @@ using namespace std;
 #define BLOCK_SIZE 50
 
 #define MAX_SPEED_X 5
-#define MAX_SPEED_Y 50
+
 #define JUNP_SPEED 20
 #define GRAVITY 1
 
@@ -305,11 +305,6 @@ void update() {
         );
     });
 
-    gPlayer.addVector(0, GRAVITY);
-    pVec = gPlayer.getVector();
-    if(pVec.y > MAX_SPEED_Y) {
-        gPlayer.setVector(pVec.x, MAX_SPEED_Y);
-    }
     vector<LinkedNode<Object>**> hits = checkHitObject();
     for(auto o : hits) {
         if((*o)->m_value.getImageHandle() == g1yenImgHandle) {
@@ -392,6 +387,7 @@ int main(int argc, char** argv) {
   game.keyboardFunc(key);
   game.keyboardUpFunc(keyUp);
 
+  gPlayer.setGravity(GRAVITY);
   Object oneYen;
   oneYen.setImageHandle(g1yenImgHandle);
   oneYen.setSize(50, 50);
