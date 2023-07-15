@@ -8,6 +8,7 @@
 #include "Util.hpp"
 #include "Object.hpp"
 #include "Player.hpp"
+#include "Enemy.hpp"
 #include "Character.hpp"
 
 #pragma comment(lib, "opencv_world455.lib")
@@ -49,9 +50,11 @@ struct {
 
 int g1yenImgHandle;
 int gGlassBlock;
-Player gPlayer;
 Game game;
 LinkedList<Object> objList;
+
+Player gPlayer;
+Enemy gEnemy;
 
 int gStage[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -295,8 +298,11 @@ void update() {
     int screenX = pPos.x < SCREEN_W / 2 ? 0 : (pPos.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? STAGE_W * BLOCK_SIZE - SCREEN_W : pPos.x - SCREEN_W / 2);
     game.drawImage(
         gPlayer.getImageHandle(),
-        pPos.x - screenX, pPos.y );
+        pPos.x - screenX, pPos.y);
     
+    game.drawImage(
+        gEnemy.getImageHandle(),
+        0, 0);
     objList.for_each([&](auto node) {
         Vector2d oPos = (*node)->m_value.getPosition();
         game.drawImage(
@@ -369,8 +375,11 @@ void keyUp(unsigned char key, int x, int y) {
 }
 
 int main(int argc, char** argv) {
-  gPlayer.setImageHandle(game.loadImage("images/player.bmp"));
+  gPlayer.setImageHandle(game.loadImage("images/player.bmp", true));
   gPlayer.setSize(50, 100);
+
+  gEnemy.setImageHandle(game.loadImage("images/Pipoya RPG Monster Pack/noShadow/pipo-enemy046a.png"));
+  gEnemy.setSize(20, 20);
 
   g1yenImgHandle = game.loadImage("images/1-yen.png", BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f);
 

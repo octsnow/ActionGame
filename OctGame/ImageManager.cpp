@@ -9,6 +9,23 @@ namespace {
             cv::cvtColor(img, img, cv::COLOR_BGRA2RGBA);
         }
 
+        if(img.channels() < 4) {
+            const int dims[] = {img.cols, img.rows, 4};
+            cv::Mat newImg = cv::Mat::ones(3, dims, img.type());
+
+            for(int y = 0; y < img.rows; y++) {
+                for(int x = 0; x < img.cols; x++) {
+                    for(int c = 0; c < 3; c++) {
+                        newImg.data[(y * img.cols + x)  * 4 + c] = img.data[(y * img.cols + x) * 3 + c];
+                    }
+                    newImg.data[(y * img.cols + x) * 4 + 3] = 1;
+                }
+            }
+
+            img = newImg;
+        }
+
+
         return img;
     }
 

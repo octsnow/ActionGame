@@ -23,12 +23,12 @@ public:
     int loadRegionImage(string filepath, float sx, float sy, int width, int height, int n, bool isBmp=false);
     void drawBox(int x1, int y1, int x2, int y2, int color);
     void drawImage(int handle, int dX, int dY, bool transpose=false);
-    void text(int x, int y, char* format, ...);
+    void text(int x, int y, const char* format, ...);
     void clearScreen();
     void screenSwap();
 
 private:
-    uint8_t* m_gScreen;
+    uint8_t* m_screen;
     int m_width;
     int m_height;
     HDC m_hDC;

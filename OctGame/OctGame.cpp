@@ -22,7 +22,7 @@ void Game::init(int* argc, char** argv, int width, int height) {
 
     HDC tmpDC = GetDC(GetDesktopWindow());
     this->m_hBitmap = CreateDIBSection(
-          tmpDC, &bmi, DIB_RGB_COLORS, (void**)&this->m_gScreen, 0, 0);
+          tmpDC, &bmi, DIB_RGB_COLORS, (void**)&this->m_screen, 0, 0);
 
     if(this->m_hBitmap == NULL) {
         cout << "hBitmap is NULL" << endl;
@@ -92,16 +92,16 @@ int Game::loadRegionImage(string filepath, float sx, float sy, int width, int he
 
 void Game::drawBox(int x1, int y1, int x2, int y2, int color){
     int minX = x1 < x2 ? x1 : x2;
-    int minY = this->m_height - ( y1 > y2 ? y1 : y2 ) - 1;
+    int minY = this->m_height - (y1 > y2 ? y1 : y2) - 1;
     int maxX = x1 > x2 ? x1 : x2;
-    int maxY = this->m_height - ( y1 < y2 ? y1 : y2 ) - 1;
+    int maxY = this->m_height - (y1 < y2 ? y1 : y2) - 1;
 
-    for( int y = minY; y < maxY; y++ ){
-        for( int x = minX; x < maxX; x++ ){
-            for( int c = 0; c < 3; c++ ){
-                if( y < 0 || this->m_height <= y ) continue;
-                if( x < 0 || this->m_width <= x ) continue;
-                this->m_gScreen[ ( y * this->m_width + x ) * 3 + c ] = ( char )( ( color >> ( ( 2 - c ) * 8 ) ) & 0xFF );
+    for(int y = minY; y < maxY; y++){
+        for(int x = minX; x < maxX; x++){
+            for(int c = 0; c < 3; c++){
+                if(y < 0 || this->m_height <= y) continue;
+                if(x < 0 || this->m_width <= x) continue;
+                this->m_screen[(y * this->m_width + x) * 3 + c] = (char)((color >> ((2 - c) * 8)) & 0xFF);
             }
         }
     }
@@ -116,23 +116,27 @@ void Game::drawImage(int handle, int dX, int dY, bool transpose){
 
     int imgC = img->channels();
     int imgW = img->cols, imgH = img->rows;
+    float tp;
 
     uchar* data = img->data;
-    for( int y = 0; y < imgH && y + dY < this->m_height; y++ ){
-        for( int x = 0; x < imgW && x + dX < this->m_width; x++ ){
+    for(int y = 0; y < imgH && y + dY < this->m_height; y++){
+        for(int x = 0; x < imgW && x + dX < this->m_width; x++){
             if(transpose && data[(y * imgW + x) * imgC + 3] == 0) continue;
-            for( int c = 0; c < 3; c++ ){
-                int scIdx = ( ( this->m_height - ( y + dY ) - 1 ) * this->m_width + ( x + dX ) ) * 3 + c;
-                int dtIdx = ( y * imgW + x ) * imgC + c;
-                if( y + dY < 0 || this->m_height <= y + dY ) continue;
-                if( x + dX < 0 || this->m_width <= x + dX ) continue;
-                this->m_gScreen[ scIdx ] = data[ dtIdx ];
+
+            tp = img->data[(y * imgW + x) * imgC + 3] / 255.0f;
+
+            for(int c = 0; c < 3; c++){
+                int scIdx = ((this->m_height - (y + dY) - 1) * this->m_width + (x + dX)) * 3 + c;
+                int dtIdx = (y * imgW + x) * imgC + c;
+                if(y + dY < 0 || this->m_height <= y + dY) continue;
+                if(x + dX < 0 || this->m_width <= x + dX) continue;
+                this->m_screen[scIdx] = this->m_screen[scIdx] * (1 - tp) + img->data[dtIdx] * tp;
             }
         }
     }
 }
 
-void Game::text(int x, int y, char* format, ...) {
+void Game::text(int x, int y, const char* format, ...) {
     char buf[256];
     va_list ap;
     va_start(ap, format);
@@ -143,10 +147,10 @@ void Game::text(int x, int y, char* format, ...) {
 }
 
 void Game::clearScreen(){
-    memset(this->m_gScreen, 0, this->m_height * this->m_width * 3);
+    memset(this->m_screen, 0, this->m_height * this->m_width * 3);
 }
 
 void Game::screenSwap() {
-    glDrawPixels(this->m_width, this->m_height, GL_RGB, GL_UNSIGNED_BYTE, this->m_gScreen );
+    glDrawPixels(this->m_width, this->m_height, GL_RGB, GL_UNSIGNED_BYTE, this->m_screen );
     glutSwapBuffers();
 }
