@@ -1,4 +1,5 @@
 #pragma once
+#include "OctGame/OctGame.hpp"
 
 typedef struct _Vector2d {
     double x, y;
@@ -23,8 +24,11 @@ public:
     void addVector(double x, double y);
     Vector2d getVector();
 
+    void updatePosition();
+
     void setGravity(double g);
     void update() {}
+    void draw(Game* game, Vector2d cameraPos);
 
 protected:
     double m_gravity;

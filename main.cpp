@@ -295,20 +295,14 @@ void update() {
     drawStage();
 
     pPos = gPlayer.getPosition();
-    int screenX = pPos.x < SCREEN_W / 2 ? 0 : (pPos.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? STAGE_W * BLOCK_SIZE - SCREEN_W : pPos.x - SCREEN_W / 2);
-    game.drawImage(
-        gPlayer.getImageHandle(),
-        pPos.x - screenX, pPos.y);
-    
-    game.drawImage(
-        gEnemy.getImageHandle(),
-        0, 0);
+    Vector2d cameraPos;
+    cameraPos.x = pPos.x < SCREEN_W / 2 ? 0 : (pPos.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? STAGE_W * BLOCK_SIZE - SCREEN_W : pPos.x - SCREEN_W / 2);
+    cameraPos.y = 0;
+    gPlayer.draw(&game, cameraPos);
+    gEnemy.draw(&game, cameraPos);
     objList.for_each([&](auto node) {
         Vector2d oPos = (*node)->m_value.getPosition();
-        game.drawImage(
-            (*node)->m_value.getImageHandle(),
-            oPos.x - screenX, oPos.y
-        );
+        (*node)->m_value.draw(&game, cameraPos);
     });
 
     vector<LinkedNode<Object>**> hits = checkHitObject();
@@ -321,6 +315,7 @@ void update() {
     }
 
     gPlayer.update();
+    gEnemy.update();
     game.text(0, 0, "%d coin", gGameInf.money);
 }
 
@@ -378,8 +373,8 @@ int main(int argc, char** argv) {
   gPlayer.setImageHandle(game.loadImage("images/player.bmp", true));
   gPlayer.setSize(50, 100);
 
-  gEnemy.setImageHandle(game.loadImage("images/Pipoya RPG Monster Pack/noShadow/pipo-enemy046a.png"));
-  gEnemy.setSize(20, 20);
+  gEnemy.setImageHandle(game.loadImage("images/Pipoya RPG Monster Pack/noShadow/pipo-enemy046a.png", 1/2.0f, 1/2.0f, true));
+  gEnemy.setSize(235 / 2, 290 / 2);
 
   g1yenImgHandle = game.loadImage("images/1-yen.png", BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f);
 
@@ -397,6 +392,7 @@ int main(int argc, char** argv) {
   game.keyboardUpFunc(keyUp);
 
   gPlayer.setGravity(GRAVITY);
+  gEnemy.setGravity(GRAVITY);
   Object oneYen;
   oneYen.setImageHandle(g1yenImgHandle);
   oneYen.setSize(50, 50);

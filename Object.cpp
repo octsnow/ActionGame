@@ -62,6 +62,17 @@ Vector2d Object::getVector() {
     return this->m_vector;
 }
 
+void Object::updatePosition() {
+    this->m_position.x += this->m_vector.x;
+    this->m_position.y += this->m_vector.y;
+}
+
 void Object::setGravity(double g) {
     this->m_gravity = g;
+}
+
+void Object::draw(Game* game, Vector2d cameraPos) {
+    game->drawImage(
+            this->m_imageHandle,
+            this->m_position.x - cameraPos.x, this->m_position.y - cameraPos.y);
 }
