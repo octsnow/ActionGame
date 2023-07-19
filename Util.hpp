@@ -1,6 +1,14 @@
 #pragma once
 #include <vector>
 #include "Object.hpp"
+#include "Player.hpp"
+
+class CollisionBox {
+public:
+    Vector2d pos;
+    int width;
+    int height;
+};
 
 template<typename T>
 class LinkedNode {
@@ -67,3 +75,22 @@ public:
 private:
     LinkedNode<Object>* m_head;
 };
+
+class Stage {
+public:
+    void setStage(int* stage, int width, int height, int blockSize);
+    void setScreenSize(int width, int height);
+    int getHitVertical(Object obj);
+    int getHitHorizontal(Object obj);
+    bool checkHitBlock(Object* obj);
+private:
+    int* m_stage;
+    int m_stageWidth;
+    int m_stageHeight;
+    int m_screenWidth;
+    int m_screenHeight;
+    int m_blockSize;
+};
+
+bool checkHitBox(CollisionBox c1, CollisionBox c2);
+vector<LinkedNode<Object>**> checkHitObject(Player player, LinkedList<Object>& objList);

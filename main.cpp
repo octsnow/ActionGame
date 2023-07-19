@@ -51,6 +51,7 @@ struct {
 int g1yenImgHandle;
 int gGlassBlock;
 Game game;
+Stage stage;
 LinkedList<Object> objList;
 
 Player gPlayer;
@@ -70,141 +71,6 @@ int gStage[] = {
     0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
-
-bool checkHitBox( int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2 ){
-    int lx, ly, lw, lh, hx, hy;
-    if( x1 < x2 ){
-        lx = x1;
-        lw = w1;
-        hx = x2;
-    }else{
-        lx = x2;
-        lw = w2;
-        hx = x1;
-    }
-
-    if( y1 < y2 ){
-        ly = y1;
-        lh = h1;
-        hy = y2;
-    }else{
-        ly = y2;
-        lh = h2;
-        hy = y1;
-    }
-
-    return ( lx <= hx && hx < lx + lw ) && ( ly <= hy && hy < ly + lh );
-}
-
-int checkGroundHead(bool isGround){
-    const int pW = gPlayer.getWidth();
-    const int pH = gPlayer.getHeight();
-    Vector2d pPos = gPlayer.getPosition();
-    int const  leftPx = pPos.x;
-    int const  rightPx = pPos.x + pW - 1;
-    int groundY = -1;
-    int leftBlkX, rightBlkX, checkBlkY, offset;
-
-    if(pPos.y + pH >= SCREEN_H){
-        return SCREEN_H - pH;
-    }
-
-    if(isGround){
-        checkBlkY = (pPos.y + pH) / BLOCK_SIZE;
-    }else{
-        checkBlkY = (pPos.y - 1 ) / BLOCK_SIZE;
-    }
-
-    offset = checkBlkY * STAGE_W;
-
-    leftBlkX = leftPx / BLOCK_SIZE;
-    rightBlkX = rightPx / BLOCK_SIZE;
-
-    for(int i = leftBlkX; i <= rightBlkX; i++) {
-        int index = offset + i;
-        if(index < 0 || index >= STAGE_W * STAGE_H) continue;
-        if(0 < gStage[index] && gStage[index] < 3) {
-            if(isGround) {
-                groundY = checkBlkY * BLOCK_SIZE - pH;
-            } else {
-                groundY = checkBlkY * BLOCK_SIZE + BLOCK_SIZE;
-            }
-            break;
-        }
-    }
-
-    return groundY;
-}
-
-int checkWall(bool isRight){
-    const int pW = gPlayer.getWidth();
-    const int pH = gPlayer.getHeight();
-    const Vector2d pPos = gPlayer.getPosition();
-    int const  topPy = pPos.y;
-    int const  bottomPy = pPos.y + pH - 1;
-    int WallX = -1;
-    int topBlkY, bottomBlkY, checkBlkX;
-    if(isRight) {
-        checkBlkX = (pPos.x + pW) / BLOCK_SIZE;
-    } else {
-        checkBlkX = (pPos.x - 1) / BLOCK_SIZE;
-    }
-
-    topBlkY = topPy / BLOCK_SIZE;
-    bottomBlkY = bottomPy / BLOCK_SIZE;
-
-    for(int i = topBlkY; i <= bottomBlkY; i++) {
-        int index = i * STAGE_W + checkBlkX;
-        if(index < 0 || index >= STAGE_W * STAGE_H) continue;
-        if(0 < gStage[index] && gStage[index] < 3){
-            if(isRight) {
-                WallX = checkBlkX * BLOCK_SIZE - pW;
-            } else {
-                WallX = (checkBlkX + 1) * BLOCK_SIZE;
-            }
-        }
-    }
-
-    return WallX;
-}
-
-vector<LinkedNode<Object>**> checkHitObject() {
-    vector<LinkedNode<Object>**> result;
-
-    objList.for_each([&](LinkedNode<Object>** node) {
-            Object* object = &(*node)->m_value;
-            double x1, x2, y1, y2;
-            int width, height;
-            Vector2d pPos = gPlayer.getPosition();
-            Vector2d oPos = object->getPosition();
-
-            if(oPos.x < pPos.x) {
-                x1 = oPos.x;
-                x2 = pPos.x;
-                width = object->getWidth();
-            } else {
-                x1 = pPos.x;
-                x2 = oPos.x;
-                width = gPlayer.getWidth();
-            }
-
-            if(oPos.y < pPos.y) {
-                y1 = oPos.y;
-                y2 = pPos.y;
-                height = object->getHeight();
-            } else {
-                y1 = pPos.y;
-                y2 = oPos.y;
-                height = gPlayer.getHeight();
-            }
-
-            if(x2 - x1 < width && y2 - y1 < height) {
-                result.push_back(node);
-            }
-    });
-
-    return result;
-}
 
 void drawStage(){
     int scwHlf = SCREEN_W / 2;
@@ -234,7 +100,6 @@ void drawStage(){
 
 void update() {
     bool isMove = false;
-    int groundY = -1, wallX = -1;
     Vector2d pPos, pVec;
     
     if(gGameInf.ks.a) {
@@ -252,42 +117,17 @@ void update() {
         isMove = true;
     }
 
+    gGameInf.isGround = stage.checkHitBlock(&gPlayer);
     if(gGameInf.ks.space && gGameInf.isGround) {
         gPlayer.setVector(gPlayer.getVector().x, -JUNP_SPEED);
     }
-
-    if(gPlayer.getVector().y != 0) {
-        Vector2d tmpPos = gPlayer.getPosition();
-        Vector2d pVec = gPlayer.getVector();
-        gPlayer.translate(0, pVec.y);
-        groundY = checkGroundHead(pVec.y > 0);
-        gPlayer.setPosition(gPlayer.getPosition().x, tmpPos.y);
-    }
-    if(gPlayer.getVector().x != 0) {
-        Vector2d tmpPos = gPlayer.getPosition();
-        Vector2d pVec = gPlayer.getVector();
-        gPlayer.translate(pVec.x, 0);
-        wallX = checkWall(pVec.x > 0);
-        gPlayer.setPosition(tmpPos.x, gPlayer.getPosition().y);
-    }
-
     pVec = gPlayer.getVector();
-    if(groundY >= 0) {
-        gGameInf.isGround = gPlayer.getVector().y > 0;
-        gPlayer.setVector(gPlayer.getVector().x, 0);
-        gPlayer.setPosition(gPlayer.getPosition().x, groundY);
-    } else {
-        gGameInf.isGround = false;
-    }
 
     if(!isMove) {
         gPlayer.addVector(-(gPlayer.getVector().x != 0 ? ((int)(gPlayer.getVector().x > 0) * 2 - 1) : 0), 0);
     }
 
-    if(wallX >= 0) {
-        gPlayer.setVector(0, gPlayer.getVector().y);
-        gPlayer.setPosition(wallX, gPlayer.getPosition().y);
-    }
+    stage.checkHitBlock(&gEnemy);
 
     pVec = gPlayer.getVector();
     gPlayer.translate(pVec.x, pVec.y);
@@ -305,7 +145,7 @@ void update() {
         (*node)->m_value.draw(&game, cameraPos);
     });
 
-    vector<LinkedNode<Object>**> hits = checkHitObject();
+    vector<LinkedNode<Object>**> hits = checkHitObject(gPlayer, objList);
     for(auto o : hits) {
         if((*o)->m_value.getImageHandle() == g1yenImgHandle) {
             gGameInf.money++;
@@ -373,23 +213,28 @@ int main(int argc, char** argv) {
   gPlayer.setImageHandle(game.loadImage("images/player.bmp", true));
   gPlayer.setSize(50, 100);
 
-  gEnemy.setImageHandle(game.loadImage("images/Pipoya RPG Monster Pack/noShadow/pipo-enemy046a.png", 1/2.0f, 1/2.0f, true));
-  gEnemy.setSize(235 / 2, 290 / 2);
+  gEnemy.setImageHandle(game.loadImage("images/slime.png", true));
+  gEnemy.setSize(50, 50);
+  gEnemy.setPosition(30, 0);
 
-  g1yenImgHandle = game.loadImage("images/1-yen.png", BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f);
+  g1yenImgHandle = game.loadImage(
+          "images/1-yen.png",
+          BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f);
 
-  gGlassBlock = game.loadRegionImage("images/mapchip2_0724/mapchip2/MapChip/kabe-ue_dungeon1.png", BLOCK_SIZE / 16.0f, BLOCK_SIZE / 16.0f, 16, 16, 3, true);
+  gGlassBlock = game.loadRegionImage(
+          "images/mapchip2_0724/mapchip2/MapChip/kabe-ue_dungeon1.png",
+          BLOCK_SIZE / 16.0f, BLOCK_SIZE / 16.0f, 16, 16, 3, true);
 
-  game.init(
-      &argc, argv,
-      SCREEN_W, SCREEN_H
-  );
+  game.init(&argc, argv, SCREEN_W, SCREEN_H);
 
   game.displayFunc(display);
   game.reshapeFunc(resize);
   game.idleFunc(idle);
   game.keyboardFunc(key);
   game.keyboardUpFunc(keyUp);
+
+  stage.setStage(gStage, STAGE_W, STAGE_H, BLOCK_SIZE);
+  stage.setScreenSize(SCREEN_W, SCREEN_H);
 
   gPlayer.setGravity(GRAVITY);
   gEnemy.setGravity(GRAVITY);
