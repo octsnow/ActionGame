@@ -112,9 +112,10 @@ int Stage::getHitHorizontal(Object obj){
     return WallX;
 }
 
-bool Stage::checkHitBlock(Object* obj) {
+int Stage::checkHitBlock(Object* obj) {
     bool isGround = false;
     int groundY = -1, wallX = -1;
+    int flag = 0;
 
     if(obj->getVector().y != 0) {
         Vector2d tmpPos = obj->getPosition();
@@ -136,14 +137,18 @@ bool Stage::checkHitBlock(Object* obj) {
         isGround = obj->getVector().y > 0;
         obj->setVector(obj->getVector().x, 0);
         obj->setPosition(obj->getPosition().x, groundY);
+        flag += 1; // flag 01
     }
 
     if(wallX >= 0) {
         obj->setVector(0, obj->getVector().y);
         obj->setPosition(wallX, obj->getPosition().y);
+        flag += 2; // flag 10
     }
 
-    return isGround;
+    obj->setIsGround(isGround);
+
+    return flag;
 }
 
 vector<LinkedNode<Object>**> checkHitObject(Player player, LinkedList<Object>& objList) {

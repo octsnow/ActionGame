@@ -82,7 +82,7 @@ public:
     void setScreenSize(int width, int height);
     int getHitVertical(Object obj);
     int getHitHorizontal(Object obj);
-    bool checkHitBlock(Object* obj);
+    int checkHitBlock(Object* obj);
 private:
     int* m_stage;
     int m_stageWidth;

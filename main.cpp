@@ -44,7 +44,6 @@ struct {
 
 struct {
     KeyState ks = {false, false};
-    bool isGround = false;
     unsigned int money = 0;
 } gGameInf;
 
@@ -117,8 +116,12 @@ void update() {
         isMove = true;
     }
 
-    gGameInf.isGround = stage.checkHitBlock(&gPlayer);
-    if(gGameInf.ks.space && gGameInf.isGround) {
+    stage.checkHitBlock(&gPlayer);
+    if(stage.checkHitBlock(&gEnemy) & 2) {
+        gEnemy.setVector(-1, 0);
+    }
+
+    if(gGameInf.ks.space && gPlayer.getIsGround()) {
         gPlayer.setVector(gPlayer.getVector().x, -JUNP_SPEED);
     }
     pVec = gPlayer.getVector();
@@ -127,17 +130,18 @@ void update() {
         gPlayer.addVector(-(gPlayer.getVector().x != 0 ? ((int)(gPlayer.getVector().x > 0) * 2 - 1) : 0), 0);
     }
 
-    stage.checkHitBlock(&gEnemy);
-
-    pVec = gPlayer.getVector();
-    gPlayer.translate(pVec.x, pVec.y);
-
     drawStage();
 
+    gPlayer.updatePosition();
+    gEnemy.updatePosition();
+
     pPos = gPlayer.getPosition();
+    // calculate camera position
     Vector2d cameraPos;
     cameraPos.x = pPos.x < SCREEN_W / 2 ? 0 : (pPos.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? STAGE_W * BLOCK_SIZE - SCREEN_W : pPos.x - SCREEN_W / 2);
     cameraPos.y = 0;
+
+    // draw
     gPlayer.draw(&game, cameraPos);
     gEnemy.draw(&game, cameraPos);
     objList.for_each([&](auto node) {

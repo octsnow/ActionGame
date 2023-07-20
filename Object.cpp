@@ -67,6 +67,14 @@ void Object::updatePosition() {
     this->m_position.y += this->m_vector.y;
 }
 
+void Object::setIsGround(bool flag) {
+    this->isGround = flag;
+}
+
+bool Object::getIsGround() {
+    return this->isGround;
+}
+
 void Object::setGravity(double g) {
     this->m_gravity = g;
 }

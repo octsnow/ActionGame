@@ -26,7 +26,12 @@ public:
 
     void updatePosition();
 
+    void setIsGround(bool flag);
+    bool getIsGround();
+
     void setGravity(double g);
+
+    void init() {}
     void update() {}
     void draw(Game* game, Vector2d cameraPos);
 
@@ -36,5 +41,5 @@ protected:
     int m_width, m_height;
     Vector2d m_position;
     Vector2d m_vector;
+    bool isGround;
 };
-

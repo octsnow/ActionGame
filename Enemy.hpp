@@ -3,5 +3,6 @@
 
 class Enemy : public Object {
 public:
+    void init();
     void update();
 };
