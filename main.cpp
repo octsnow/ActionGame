@@ -36,6 +36,7 @@ const int FrameTime = 1000 / FPS;
 
 typedef struct {
     bool a, d, space;
+    bool key[256];
 } KeyState;
 
 struct {
@@ -45,7 +46,7 @@ struct {
 struct {
     KeyState ks = {false, false};
     unsigned int money = 0;
-} gGameInf;
+} gGameInfo;
 
 int g1yenImgHandle;
 int gGlassBlock;
@@ -101,14 +102,15 @@ void update() {
     bool isMove = false;
     Vector2d pPos, pVec;
     
-    if(gGameInf.ks.a) {
+    // move when a or d is pressed
+    if(gGameInfo.ks.key['a']) {
         gPlayer.addVector(-1, 0);
         if(gPlayer.getVector().x < -MAX_SPEED_X) {
             gPlayer.setVector(-MAX_SPEED_X, gPlayer.getVector().y);
         }
         isMove = true;
     }
-    if(gGameInf.ks.d) {
+    if(gGameInfo.ks.key['d']) {
         gPlayer.addVector(1, 0);
         if(gPlayer.getVector().x > MAX_SPEED_X) {
             gPlayer.setVector(MAX_SPEED_X, gPlayer.getVector().y);
@@ -121,13 +123,16 @@ void update() {
         gEnemy.setVector(-1, 0);
     }
 
-    if(gGameInf.ks.space && gPlayer.getIsGround()) {
+    if(gGameInfo.ks.key[' '] && gPlayer.getIsGround()) {
         gPlayer.setVector(gPlayer.getVector().x, -JUNP_SPEED);
     }
     pVec = gPlayer.getVector();
 
-    if(!isMove) {
+    if(isMove) {
+        gPlayer.setAnimationNum(1);
+    } else {
         gPlayer.addVector(-(gPlayer.getVector().x != 0 ? ((int)(gPlayer.getVector().x > 0) * 2 - 1) : 0), 0);
+        gPlayer.setAnimationNum(0);
     }
 
     drawStage();
@@ -135,8 +140,8 @@ void update() {
     gPlayer.updatePosition();
     gEnemy.updatePosition();
 
-    pPos = gPlayer.getPosition();
     // calculate camera position
+    pPos = gPlayer.getPosition();
     Vector2d cameraPos;
     cameraPos.x = pPos.x < SCREEN_W / 2 ? 0 : (pPos.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? STAGE_W * BLOCK_SIZE - SCREEN_W : pPos.x - SCREEN_W / 2);
     cameraPos.y = 0;
@@ -152,7 +157,7 @@ void update() {
     vector<LinkedNode<Object>**> hits = checkHitObject(gPlayer, objList);
     for(auto o : hits) {
         if((*o)->m_value.getImageHandle() == g1yenImgHandle) {
-            gGameInf.money++;
+            gGameInfo.money++;
 
             objList.remove(o);
         }
@@ -160,7 +165,7 @@ void update() {
 
     gPlayer.update();
     gEnemy.update();
-    game.text(0, 0, "%d coin", gGameInf.money);
+    game.text(0, 0, "%d coin", gGameInfo.money);
 }
 
 void idle() {
@@ -198,26 +203,27 @@ void init() {
 }
 
 void key(unsigned char key, int x, int y) {
-    switch(key) {
-    case 'a': gGameInf.ks.a = true; break;
-    case 'd': gGameInf.ks.d = true; break;
-    case ' ': gGameInf.ks.space = true; break;
-    }
+    gGameInfo.ks.key[(int)key] = true;
 }
 
 void keyUp(unsigned char key, int x, int y) {
-    switch(key) {
-    case 'a': case 'A': gGameInf.ks.a = false; break;
-    case 'd': case 'D': gGameInf.ks.d = false; break;
-    case ' ': gGameInf.ks.space = false; break;
-    }
+    gGameInfo.ks.key[(int)key] = false;
 }
 
 int main(int argc, char** argv) {
-  gPlayer.setImageHandle(game.loadImage("images/player.bmp", true));
+  gPlayer.setImageHandle(0, {
+          game.loadImage("images/player.bmp", true)});
+
+  gPlayer.setImageHandle(80, {
+          game.loadImage("images/player_walk0.bmp", true),
+          game.loadImage("images/player_walk1.bmp", true),
+          game.loadImage("images/player_walk2.bmp", true),
+          game.loadImage("images/player_walk3.bmp", true)});
+
   gPlayer.setSize(50, 100);
 
-  gEnemy.setImageHandle(game.loadImage("images/slime.png", true));
+  gEnemy.setImageHandle(0, {
+          game.loadImage("images/slime.png", true)});
   gEnemy.setSize(50, 50);
   gEnemy.setPosition(30, 0);
 
@@ -243,7 +249,7 @@ int main(int argc, char** argv) {
   gPlayer.setGravity(GRAVITY);
   gEnemy.setGravity(GRAVITY);
   Object oneYen;
-  oneYen.setImageHandle(g1yenImgHandle);
+  oneYen.setImageHandle(0, {g1yenImgHandle});
   oneYen.setSize(50, 50);
   oneYen.setPosition(50, 0);
 

@@ -1,7 +1,10 @@
 #include "Object.hpp"
 
 Object::Object() {
-    this->m_imageHandle = 0;
+    this->m_animNum = 0;
+    this->m_animIndex = 0;
+    this->m_lastAnimNum = 0;
+    this->m_lastTime = clock();
     this->m_width = 0;
     this->m_height = 0;
     this->m_position.x = 0;
@@ -10,12 +13,39 @@ Object::Object() {
     this->m_vector.y = 0;
 }
 
-void Object::setImageHandle(int handle) {
-    this->m_imageHandle = handle;
+int Object::setImageHandle(clock_t time, std::vector<int> handles) {
+    this->m_animationTimes.push_back(time);
+    this->m_imageHandles.push_back(handles);
+
+    return this->m_imageHandles.size() - 1;
 }
 
 int Object::getImageHandle() {
-    return this->m_imageHandle;
+    int handle =  this->m_imageHandles[this->m_animNum][this->m_animIndex];
+
+    if(clock() - this->m_lastTime >= this->m_animationTimes[this->m_animNum]) {
+        this->m_animIndex = (this->m_animIndex + 1) % this->m_imageHandles[this->m_animNum].size();
+        this->m_lastTime = clock();
+    }
+
+    return handle;
+}
+
+void Object::setAnimationNum(int n) {
+    if(n < 0 || n >= this->m_imageHandles.size()) return;
+
+    this->m_animNum = n;
+    if(this->m_lastAnimNum != this->m_animNum) {
+        this->m_animIndex = 0;
+        this->m_lastTime = clock();
+    }
+    this->m_lastAnimNum = this->m_animNum;
+}
+
+void Object::setAnimationIndex(int i) {
+    if(i >= this->m_imageHandles[this->m_animNum].size()) return;
+
+    this->m_animIndex = i;
 }
 
 void Object::setSize(int width, int height) {
@@ -81,6 +111,6 @@ void Object::setGravity(double g) {
 
 void Object::draw(Game* game, Vector2d cameraPos) {
     game->drawImage(
-            this->m_imageHandle,
-            this->m_position.x - cameraPos.x, this->m_position.y - cameraPos.y);
+        this->getImageHandle(),
+        this->m_position.x - cameraPos.x, this->m_position.y - cameraPos.y, true, this->m_vector.x < 0);
 }

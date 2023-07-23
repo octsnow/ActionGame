@@ -107,8 +107,9 @@ void Game::drawBox(int x1, int y1, int x2, int y2, int color){
     }
 }
 
-void Game::drawImage(int handle, int dX, int dY, bool transpose){
+void Game::drawImage(int handle, int dx, int dy, bool transpose, bool isReverse){
     cv::Mat* img = this->imgManager.getImage(handle);
+    uchar* data = img->data;
 
     if(img == nullptr) {
         return;
@@ -116,20 +117,28 @@ void Game::drawImage(int handle, int dX, int dY, bool transpose){
 
     int imgC = img->channels();
     int imgW = img->cols, imgH = img->rows;
-    float tp;
+    float tp = 1;
 
-    uchar* data = img->data;
-    for(int y = 0; y < imgH && y + dY < this->m_height; y++){
-        for(int x = 0; x < imgW && x + dX < this->m_width; x++){
-            if(transpose && data[(y * imgW + x) * imgC + 3] == 0) continue;
+    if(transpose && imgC <= 3) transpose = false;
 
-            tp = img->data[(y * imgW + x) * imgC + 3] / 255.0f;
+    for(int y = 0; y < imgH && y + dy < this->m_height; y++){
+        for(int x = 0; x < imgW && x + dx < this->m_width; x++){
+            int ix = x;
+            int iy = y;
+            if(isReverse) {
+                ix = imgW - x - 1;
+            }
+
+            if(transpose) {
+                if(data[(iy * imgW + ix) * imgC + 3] == 0) continue;
+                tp = img->data[(iy * imgW + ix) * imgC + 3] / 255.0f;
+            }
 
             for(int c = 0; c < 3; c++){
-                int scIdx = ((this->m_height - (y + dY) - 1) * this->m_width + (x + dX)) * 3 + c;
-                int dtIdx = (y * imgW + x) * imgC + c;
-                if(y + dY < 0 || this->m_height <= y + dY) continue;
-                if(x + dX < 0 || this->m_width <= x + dX) continue;
+                int scIdx = ((this->m_height - (y + dy) - 1) * this->m_width + (x + dx)) * 3 + c;
+                int dtIdx = (iy * imgW + ix) * imgC + c;
+                if(iy + dy < 0 || this->m_height <= iy + dy) continue;
+                if(ix + dx < 0 || this->m_width <= ix + dx) continue;
                 this->m_screen[scIdx] = this->m_screen[scIdx] * (1 - tp) + img->data[dtIdx] * tp;
             }
         }
