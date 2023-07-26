@@ -36,5 +36,5 @@ private:
     HBITMAP m_hBitmap;
     HGDIOBJ m_h01dHandle;
 
-    ImageManager imgManager;
+    ImageManager m_imgManager;
 };

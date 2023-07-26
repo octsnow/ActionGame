@@ -1,6 +1,0 @@
-SRC_FILES = $(wildcard *.cpp)
-
-all: main
-
-main:
-	cl /EHsc $(SRC_FILES) /Fe:main

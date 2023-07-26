@@ -11,6 +11,7 @@ Object::Object() {
     this->m_position.y = 0;
     this->m_vector.x = 0;
     this->m_vector.y = 0;
+    this->m_isLeft = false;
 }
 
 int Object::setImageHandle(clock_t time, std::vector<int> handles) {
@@ -92,6 +93,14 @@ Vector2d Object::getVector() {
     return this->m_vector;
 }
 
+void Object::turnLeft() {
+    this->m_isLeft = true;
+}
+
+void Object::turnRight() {
+    this->m_isLeft = false;
+}
+
 void Object::updatePosition() {
     this->m_position.x += this->m_vector.x;
     this->m_position.y += this->m_vector.y;
@@ -112,5 +121,7 @@ void Object::setGravity(double g) {
 void Object::draw(Game* game, Vector2d cameraPos) {
     game->drawImage(
         this->getImageHandle(),
-        this->m_position.x - cameraPos.x, this->m_position.y - cameraPos.y, true, this->m_vector.x < 0);
+        this->m_position.x - cameraPos.x,
+        this->m_position.y - cameraPos.y,
+        true, this->m_isLeft);
 }

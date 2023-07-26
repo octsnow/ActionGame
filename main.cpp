@@ -105,6 +105,7 @@ void update() {
     // move when a or d is pressed
     if(gGameInfo.ks.key['a']) {
         gPlayer.addVector(-1, 0);
+        gPlayer.turnLeft();
         if(gPlayer.getVector().x < -MAX_SPEED_X) {
             gPlayer.setVector(-MAX_SPEED_X, gPlayer.getVector().y);
         }
@@ -112,6 +113,7 @@ void update() {
     }
     if(gGameInfo.ks.key['d']) {
         gPlayer.addVector(1, 0);
+        gPlayer.turnRight();
         if(gPlayer.getVector().x > MAX_SPEED_X) {
             gPlayer.setVector(MAX_SPEED_X, gPlayer.getVector().y);
         }

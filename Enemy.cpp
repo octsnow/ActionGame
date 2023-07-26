@@ -11,6 +11,7 @@ void Enemy::init() {
 void Enemy::update() {
     if(this->getIsGround()) {
         this->setVector(1, 0);
+        this->turnRight();
     }
 
     this->addVector(0, this->m_gravity);

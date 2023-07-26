@@ -75,19 +75,19 @@ void Game::destroy() {
 }
 
 int Game::loadImage(string filepath, bool isBmp) {
-    return this->imgManager.loadImage(filepath, isBmp);
+    return this->m_imgManager.loadImage(filepath, isBmp);
 }
 
 int Game::loadImage(string filepath, float sx, float sy, bool isBmp) {
-    return this->imgManager.loadImage(filepath, sx, sy, isBmp);
+    return this->m_imgManager.loadImage(filepath, sx, sy, isBmp);
 }
 
 int Game::loadRegionImage(string filepath, int width, int height, int n, bool isBmp) {
-    return this->imgManager.loadRegionImage(filepath, width, height, n, isBmp);
+    return this->m_imgManager.loadRegionImage(filepath, width, height, n, isBmp);
 }
 
 int Game::loadRegionImage(string filepath, float sx, float sy, int width, int height, int n, bool isBmp) {
-    return this->imgManager.loadRegionImage(filepath, sx, sy, width, height, n, isBmp);
+    return this->m_imgManager.loadRegionImage(filepath, sx, sy, width, height, n, isBmp);
 }
 
 void Game::drawBox(int x1, int y1, int x2, int y2, int color){
@@ -108,7 +108,7 @@ void Game::drawBox(int x1, int y1, int x2, int y2, int color){
 }
 
 void Game::drawImage(int handle, int dx, int dy, bool transpose, bool isReverse){
-    cv::Mat* img = this->imgManager.getImage(handle);
+    cv::Mat* img = this->m_imgManager.getImage(handle);
     uchar* data = img->data;
 
     if(img == nullptr) {
@@ -116,30 +116,32 @@ void Game::drawImage(int handle, int dx, int dy, bool transpose, bool isReverse)
     }
 
     int imgC = img->channels();
-    int imgW = img->cols, imgH = img->rows;
-    float tp = 1;
+    int imgW = img->cols;
+    int imgH = img->rows;
+    float tp = 1.0f;
 
-    if(transpose && imgC <= 3) transpose = false;
+    if(imgC <= 3) transpose = false;
 
     for(int y = 0; y < imgH && y + dy < this->m_height; y++){
-        for(int x = 0; x < imgW && x + dx < this->m_width; x++){
+        for(int x = 0; x < imgW && x + dx < this->m_width; x++) {
+            if(x + dx < 0 || y + dy < 0) continue;
+
             int ix = x;
             int iy = y;
+
             if(isReverse) {
                 ix = imgW - x - 1;
             }
 
             if(transpose) {
-                if(data[(iy * imgW + ix) * imgC + 3] == 0) continue;
                 tp = img->data[(iy * imgW + ix) * imgC + 3] / 255.0f;
+                if(tp == 0) continue;
             }
 
             for(int c = 0; c < 3; c++){
-                int scIdx = ((this->m_height - (y + dy) - 1) * this->m_width + (x + dx)) * 3 + c;
-                int dtIdx = (iy * imgW + ix) * imgC + c;
-                if(iy + dy < 0 || this->m_height <= iy + dy) continue;
-                if(ix + dx < 0 || this->m_width <= ix + dx) continue;
-                this->m_screen[scIdx] = this->m_screen[scIdx] * (1 - tp) + img->data[dtIdx] * tp;
+                int dtIdx = ((this->m_height - (y + dy) - 1) * this->m_width + (x + dx)) * 3 + c;
+                int scIdx = (iy * imgW + ix) * imgC + c;
+                this->m_screen[dtIdx] = this->m_screen[dtIdx] * (1 - tp) + img->data[scIdx] * tp;
             }
         }
     }

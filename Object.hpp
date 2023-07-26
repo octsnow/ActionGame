@@ -26,6 +26,8 @@ public:
     void setVector(double x, double y);
     void addVector(double x, double y);
     Vector2d getVector();
+    void turnLeft();
+    void turnRight();
 
     void updatePosition();
 
@@ -51,6 +53,7 @@ protected:
     int m_width, m_height;
     Vector2d m_position;
     Vector2d m_vector;
+    bool m_isLeft;
 
     double m_gravity;
     bool isGround;
