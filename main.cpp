@@ -9,6 +9,7 @@
 #include "Object.hpp"
 #include "Player.hpp"
 #include "Enemy.hpp"
+#include "Stage.hpp"
 #include "Character.hpp"
 
 #pragma comment(lib, "opencv_world455.lib")
@@ -213,55 +214,55 @@ void keyUp(unsigned char key, int x, int y) {
 }
 
 int main(int argc, char** argv) {
-  gPlayer.setImageHandle(0, {
+    gPlayer.setImageHandle(0, {
           game.loadImage("images/player.bmp", true)});
-
-  gPlayer.setImageHandle(80, {
+    gPlayer.setImageHandle(80, {
           game.loadImage("images/player_walk0.bmp", true),
           game.loadImage("images/player_walk1.bmp", true),
           game.loadImage("images/player_walk2.bmp", true),
           game.loadImage("images/player_walk3.bmp", true)});
+    gPlayer.setSize(50, 100);
+    gPlayer.getCollider()->addRect({{0, 0}, 50, 100});
 
-  gPlayer.setSize(50, 100);
+    gEnemy.setImageHandle(0, {
+          game.loadImage("images/slime.bmp", true)});
+    gEnemy.setSize(50, 50);
+    gEnemy.setPosition(30, 0);
+    gEnemy.getCollider()->addRect({{0, 0}, 50, 50});
 
-  gEnemy.setImageHandle(0, {
-          game.loadImage("images/slime.png", true)});
-  gEnemy.setSize(50, 50);
-  gEnemy.setPosition(30, 0);
-
-  g1yenImgHandle = game.loadImage(
-          "images/1-yen.png",
+    g1yenImgHandle = game.loadImage(
+          "images/1-yen.bmp",
           BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f);
-
-  gGlassBlock = game.loadRegionImage(
+    gGlassBlock = game.loadRegionImage(
           "images/mapchip2_0724/mapchip2/MapChip/kabe-ue_dungeon1.png",
           BLOCK_SIZE / 16.0f, BLOCK_SIZE / 16.0f, 16, 16, 3, true);
 
-  game.init(&argc, argv, SCREEN_W, SCREEN_H);
+    game.init(&argc, argv, SCREEN_W, SCREEN_H);
 
-  game.displayFunc(display);
-  game.reshapeFunc(resize);
-  game.idleFunc(idle);
-  game.keyboardFunc(key);
-  game.keyboardUpFunc(keyUp);
+    game.displayFunc(display);
+    game.reshapeFunc(resize);
+    game.idleFunc(idle);
+    game.keyboardFunc(key);
+    game.keyboardUpFunc(keyUp);
 
-  stage.setStage(gStage, STAGE_W, STAGE_H, BLOCK_SIZE);
-  stage.setScreenSize(SCREEN_W, SCREEN_H);
+    stage.setStage(gStage, STAGE_W, STAGE_H, BLOCK_SIZE);
+    stage.setScreenSize(SCREEN_W, SCREEN_H);
 
-  gPlayer.setGravity(GRAVITY);
-  gEnemy.setGravity(GRAVITY);
-  Object oneYen;
-  oneYen.setImageHandle(0, {g1yenImgHandle});
-  oneYen.setSize(50, 50);
-  oneYen.setPosition(50, 0);
+    gPlayer.setGravity(GRAVITY);
+    gEnemy.setGravity(GRAVITY);
+    Object oneYen;
+    oneYen.setImageHandle(0, {g1yenImgHandle});
+    oneYen.setSize(50, 50);
+    oneYen.setPosition(BLOCK_SIZE * 12, SCREEN_H - BLOCK_SIZE * 5);
+    oneYen.getCollider()->addRect({{0, 0}, 50, 50});
 
-  objList.append(oneYen);
+    objList.append(oneYen);
 
-  init();
+    init();
 
-  glutMainLoop();
+    glutMainLoop();
 
-  game.destroy();
+    game.destroy();
 
-  return 0;
+    return 0;
 }

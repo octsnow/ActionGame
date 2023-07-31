@@ -1,9 +1,6 @@
 #pragma once
 #include "OctGame/OctGame.hpp"
-
-typedef struct _Vector2d {
-    double x, y;
-} Vector2d;
+#include "Collider.hpp"
 
 class Object {
 public:
@@ -18,6 +15,7 @@ public:
     void setSize(int width, int height);
     int getWidth();
     int getHeight();
+    Collider* getCollider();
 
     void setPosition(double x, double y);
     void translate(double x, double y);
@@ -56,5 +54,7 @@ protected:
     bool m_isLeft;
 
     double m_gravity;
-    bool isGround;
+    bool m_IsGround;
+
+    Collider m_collider;
 };

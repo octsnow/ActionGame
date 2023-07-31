@@ -1,13 +1,9 @@
 #pragma once
 #include <vector>
-#include "Object.hpp"
-#include "Player.hpp"
 
-class CollisionBox {
+class Vector2d {
 public:
-    Vector2d pos;
-    int width;
-    int height;
+    double x, y;
 };
 
 template<typename T>
@@ -34,16 +30,16 @@ public:
     }
 
     ~LinkedList() {
-        LinkedNode<Object>* node = this->m_head;
+        LinkedNode<T>* node = this->m_head;
         while(node != nullptr) {
-            LinkedNode<Object>* nextNode = node->m_next;
+            LinkedNode<T>* nextNode = node->m_next;
             delete node;
             node = nextNode;
         }
     }
 
-    void append(Object v) {
-        LinkedNode<Object>* newNode = new LinkedNode<Object>(v);
+    void append(T v) {
+        LinkedNode<T>* newNode = new LinkedNode<T>(v);
         
         if(this->m_head != nullptr) {
             newNode->m_next = this->m_head->m_next;
@@ -73,24 +69,5 @@ public:
     }
 
 private:
-    LinkedNode<Object>* m_head;
+    LinkedNode<T>* m_head;
 };
-
-class Stage {
-public:
-    void setStage(int* stage, int width, int height, int blockSize);
-    void setScreenSize(int width, int height);
-    int getHitVertical(Object obj);
-    int getHitHorizontal(Object obj);
-    int checkHitBlock(Object* obj);
-private:
-    int* m_stage;
-    int m_stageWidth;
-    int m_stageHeight;
-    int m_screenWidth;
-    int m_screenHeight;
-    int m_blockSize;
-};
-
-bool checkHitBox(CollisionBox c1, CollisionBox c2);
-vector<LinkedNode<Object>**> checkHitObject(Player player, LinkedList<Object>& objList);

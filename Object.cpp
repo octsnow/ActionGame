@@ -65,6 +65,10 @@ int Object::getHeight() {
     return this->m_height;
 }
 
+Collider* Object::getCollider() {
+    return &this->m_collider;
+}
+
 void Object::setPosition(double x, double y) {
     this->m_position.x = x;
     this->m_position.y = y;
@@ -107,11 +111,11 @@ void Object::updatePosition() {
 }
 
 void Object::setIsGround(bool flag) {
-    this->isGround = flag;
+    this->m_IsGround = flag;
 }
 
 bool Object::getIsGround() {
-    return this->isGround;
+    return this->m_IsGround;
 }
 
 void Object::setGravity(double g) {
