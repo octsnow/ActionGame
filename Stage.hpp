@@ -1,12 +1,18 @@
 #pragma once
 #include "Object.hpp"
 
+enum class CollisionType {
+	AIR,
+	BLOCK
+};
+
 class Stage {
 public:
     void setStage(int* stage, int width, int height, int blockSize);
     void setScreenSize(int width, int height);
-    int getHitVertical(Object obj);
-    int getHitHorizontal(Object obj);
+    double checkHitVertical(Object* obj);
+    double checkHitHorizontal(Object* obj);
+	CollisionType getColType(int blockNum);
     int checkHitBlock(Object* obj);
 private:
     int* m_stage;

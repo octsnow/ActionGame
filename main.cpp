@@ -121,6 +121,9 @@ void update() {
         isMove = true;
     }
 
+    gPlayer.updatePosition();
+    gEnemy.updatePosition();
+
     stage.checkHitBlock(&gPlayer);
     if(stage.checkHitBlock(&gEnemy) & 2) {
         gEnemy.setVector(-1, 0);
@@ -139,9 +142,6 @@ void update() {
     }
 
     drawStage();
-
-    gPlayer.updatePosition();
-    gEnemy.updatePosition();
 
     // calculate camera position
     pPos = gPlayer.getPosition();
@@ -221,8 +221,8 @@ int main(int argc, char** argv) {
           game.loadImage("images/player_walk1.bmp", true),
           game.loadImage("images/player_walk2.bmp", true),
           game.loadImage("images/player_walk3.bmp", true)});
-    gPlayer.setSize(50, 100);
-    gPlayer.getCollider()->addRect({{0, 0}, 50, 100});
+    gPlayer.setSize(70, 100);
+    gPlayer.getCollider()->addRect({{10, 0}, 50, 100});
 
     gEnemy.setImageHandle(0, {
           game.loadImage("images/slime.bmp", true)});
