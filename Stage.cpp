@@ -1,5 +1,8 @@
 #include "Stage.hpp"
 
+namespace {
+};
+
 void Stage::setStage(int* stage, int width, int height, int blockSize) {
     this->m_stage = stage;
     this->m_stageWidth = width;
@@ -13,132 +16,117 @@ void Stage::setScreenSize(int width, int height) {
 }
 
 CollisionType Stage::getColType(int blockNum) {
-	if(0 < blockNum && blockNum < 3) {
-		return CollisionType::BLOCK;
-	}
-
-	return CollisionType::AIR;
-}
-
-double Stage::checkHitVertical(Object* obj){
-    Collider* collider = obj->getCollider();
-    Vector2d pos = obj->getPosition();
-	Vector2d vec = obj->getVector();
-	double newPosY = pos.y + vec.y;
-	double newVecY = obj->getVector().y;
-    bool isFall = vec.y > 0;
-	
-	obj->setPosition(pos.x, newPosY);
-
-    for(auto r : collider->getRects()) {
-	    int const left = pos.x + r.pos.x;
-	    int const right = left + r.width - 1;
-	    int leftBlkX, rightBlkX, checkBlkY, offset;
-		double rectWorldY = newPosY + r.pos.y;
-
-	    if(rectWorldY + r.height >= this->m_screenHeight){
-			newVecY = this->m_screenHeight - (pos.y + r.pos.y + r.height);
-			continue;
-	    }
-
-	    if(isFall){
-			checkBlkY = (rectWorldY + r.height) / this->m_blockSize;
-	    }else{
-			checkBlkY = (rectWorldY - 1) / this->m_blockSize;
-	    }
-
-	    offset = checkBlkY * this->m_stageWidth;
-
-	    leftBlkX = left / this->m_blockSize;
-	    rightBlkX = right / this->m_blockSize;
-
-	    for(int i = leftBlkX; i <= rightBlkX; i++) {
-			int index = offset + i;
-			if(index < 0 || index >= this->m_stageWidth * this->m_stageHeight) continue;
-			if(0 < this->m_stage[index] && this->m_stage[index] < 3) {
-				if(isFall) {
-					double tmp = (checkBlkY * this->m_blockSize) - (pos.y + r.pos.y + r.height);
-					if(tmp < newVecY) {
-						newVecY = tmp;
-					}
-				} else {
-					double tmp = ((checkBlkY + 1) * this->m_blockSize) - rectWorldY;
-					if(tmp > newVecY) {
-						newVecY = tmp;
-					}
-				}
-
-				break;
-			}
-	    }
+    if(0 < blockNum && blockNum < 3) {
+        return CollisionType::BLOCK;
     }
 
-	obj->setPosition(pos.x, pos.y);
-
-    return newVecY;
+    return CollisionType::AIR;
 }
 
-double Stage::checkHitHorizontal(Object* obj) {
-    Collider* collider = obj->getCollider();
-    Vector2d pos = obj->getPosition();
-	Vector2d vec = obj->getVector();
-	double newPosX = pos.x + vec.x;
-	double newVecX = vec.x;
-	int topBlkY, bottomBlkY, checkBlkX;
-    bool isRight = vec.x > 0;
+Vector2d Stage::adjustVector(Object* obj){
+    Collider* pObjCollider = obj->getCollider();
+    Vector2d objPos = obj->getPosition();
+    Vector2d objVec = obj->getVector();
+    Vector2d objNewPos = {
+        objPos.x + objVec.x,
+        objPos.y + objVec.y
+    };
+    Vector2d objNewVec = objVec;
+    bool isFall = objVec.y > 0;
+    bool isRight = objVec.x > 0;
+    int topBlkY, bottomBlkY, leftBlkX, rightBlkX;
+    int checkBlkX, checkBlkY;
 
-	obj->setPosition(newPosX, pos.y);
+    for(auto r : pObjCollider->getRects()) {
+        Vector2d rectWorld = {
+            objPos.x + r.pos.x,
+            objPos.y + r.pos.y
+        };
+        Vector2d rectNewWorld = {
+            objNewPos.x + r.pos.x,
+            objNewPos.y + r.pos.y
+        };
 
-    for(auto r : collider->getRects()) {
-	    int const  top = pos.y + r.pos.y;
-	    int const  bottom = top + r.height - 1;
-		double rectWorldX = newPosX + r.pos.x;
+        int const leftBlkX      = rectWorld.x / this->m_blockSize,
+                  topBlkY       = rectWorld.y / this->m_blockSize,
+                  bottomBlkY    = (rectWorld.y + r.height - 1) / this->m_blockSize,
+                  rightBlkX     = (rectWorld.x + r.width - 1) / this->m_blockSize;
 
-		if(isRight) {
-			checkBlkX = (rectWorldX + r.width) / this->m_blockSize;
-		} else {
-			checkBlkX = (rectWorldX - 1) / this->m_blockSize;
-		}
-		
-	    topBlkY = top / this->m_blockSize;
-	    bottomBlkY = bottom / this->m_blockSize;
+        if(isFall){
+            checkBlkY = (rectNewWorld.y + r.height) / this->m_blockSize;
+        }else{
+            checkBlkY = (rectNewWorld.y - 1) / this->m_blockSize;
+        }
 
-	    for(int y = topBlkY; y <= bottomBlkY; y++) {
-			int i = y * this->m_stageWidth + checkBlkX;
-			if(i < 0 || i >= this->m_stageWidth * this->m_stageHeight) continue;
-			if(this->getColType(this->m_stage[i]) == CollisionType::BLOCK) {
-				if(isRight) {
-					double tmp = (checkBlkX * this->m_blockSize) - (pos.x + r.pos.x + r.width);
-					if(tmp < newVecX) {
-						newVecX = tmp;
-					}
-				} else {
-					double tmp = ((checkBlkX + 1) * this->m_blockSize) - (pos.x + r.pos.x);
-					if(tmp > newVecX) {
-						newVecX = tmp;
-					}
-				}
-				break;
-			}
-	    }
+        if(isRight) {
+            checkBlkX = (rectNewWorld.x + r.width) / this->m_blockSize;
+        } else {
+            checkBlkX = (rectNewWorld.x - 1) / this->m_blockSize;
+        }
+       for(int y = topBlkY; y <= bottomBlkY; y++) {
+            int i = y * this->m_stageWidth + checkBlkX;
+            if(i < 0 || i >= this->m_stageWidth * this->m_stageHeight) {
+                continue;
+            }
+            if(this->getColType(this->m_stage[i]) == CollisionType::BLOCK) {
+                if(isRight) {
+                    double tmp = (checkBlkX * this->m_blockSize) - (rectWorld.x + r.width);
+                    if(tmp < objNewVec.x) {
+                        objNewVec.x = tmp;
+                    }
+                } else {
+                    double tmp = ((checkBlkX + 1) * this->m_blockSize) - rectWorld.x;
+                    if(tmp > objNewVec.x) {
+                        objNewVec.x = tmp;
+                    }
+                }
+                break;
+            }
+        }
+        
+        int offset = checkBlkY * this->m_stageWidth;
+
+        if(rectNewWorld.y + r.height >= this->m_screenHeight) {
+            objNewVec.y = this->m_screenHeight - (rectWorld.y + r.height);
+            continue;
+        }
+
+        for(int x = leftBlkX; x <= rightBlkX; x++) {
+            int i = offset + x;
+            if(i < 0 || i >= this->m_stageWidth * this->m_stageHeight) {
+                continue;
+            }
+            if(0 < this->m_stage[i] && this->m_stage[i] < 3) {
+                if(isFall) {
+                    double tmp = (checkBlkY * this->m_blockSize) - (rectWorld.y + r.height);
+                    if(tmp < objNewVec.y) {
+                        objNewVec.y = tmp;
+                    }
+                } else {
+                    double tmp = ((checkBlkY + 1) * this->m_blockSize) - rectWorld.y;
+                    if(tmp > objNewVec.y) {
+                        objNewVec.y = tmp;
+                    }
+                }
+
+                break;
+            }
+        }
     }
 
-	obj->setPosition(pos.x, pos.y);
-
-    return newVecX;
+    return objNewVec;
 }
 
 int Stage::checkHitBlock(Object* obj) {
     int flag = 0;
-	Vector2d pos = obj->getPosition();
-	Vector2d vec = obj->getVector();
-	Vector2d newVec;
+    Vector2d pos = obj->getPosition();
+    Vector2d vec = obj->getVector();
+    Vector2d newVec;
 
-	newVec.x = this->checkHitHorizontal(obj);
-	newVec.y = this->checkHitVertical(obj);
+    newVec = this->adjustVector(obj);
 
-	obj->setVector(newVec.x, newVec.y);
-	obj->setIsGround(vec.y > newVec.y);
+    obj->setVector(newVec.x, newVec.y);
+    obj->setIsGround(vec.y > newVec.y);
 
     return flag;
 }

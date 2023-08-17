@@ -121,13 +121,13 @@ void update() {
         isMove = true;
     }
 
-    gPlayer.updatePosition();
-    gEnemy.updatePosition();
-
     stage.checkHitBlock(&gPlayer);
     if(stage.checkHitBlock(&gEnemy) & 2) {
         gEnemy.setVector(-1, 0);
     }
+
+    gPlayer.updatePosition();
+    gEnemy.updatePosition();
 
     if(gGameInfo.ks.key[' '] && gPlayer.getIsGround()) {
         gPlayer.setVector(gPlayer.getVector().x, -JUNP_SPEED);

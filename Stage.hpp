@@ -10,10 +10,10 @@ class Stage {
 public:
     void setStage(int* stage, int width, int height, int blockSize);
     void setScreenSize(int width, int height);
-    double checkHitVertical(Object* obj);
-    double checkHitHorizontal(Object* obj);
+	Vector2d adjustVector(Object* obj);
 	CollisionType getColType(int blockNum);
     int checkHitBlock(Object* obj);
+
 private:
     int* m_stage;
     int m_stageWidth;
