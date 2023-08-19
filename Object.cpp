@@ -1,17 +1,16 @@
 #include "Object.hpp"
+#include <cassert>
+
+using namespace std;
 
 Object::Object() {
-    this->m_animNum = 0;
-    this->m_animIndex = 0;
-    this->m_lastAnimNum = 0;
-    this->m_lastTime = clock();
-    this->m_width = 0;
-    this->m_height = 0;
-    this->m_position.x = 0;
-    this->m_position.y = 0;
-    this->m_vector.x = 0;
-    this->m_vector.y = 0;
-    this->m_isLeft = false;
+    this->initParams();
+    this->setTag("");
+}
+
+Object::Object(std::string tag) {
+    this->initParams();
+    this->setTag(tag);
 }
 
 int Object::setImageHandle(clock_t time, std::vector<int> handles) {
@@ -65,8 +64,26 @@ int Object::getHeight() {
     return this->m_height;
 }
 
-Collider* Object::getCollider() {
-    return &this->m_collider;
+void Object::appendCollider(Collider c) {
+    this->m_colliders.push_back(c);
+}
+
+void Object::changeCollider(int i) {
+    this->m_colliderIndex = i;
+}
+
+Collider* Object::getCurrentCollider() {
+    return &this->m_colliders[this->m_colliderIndex];
+}
+
+Collider* Object::getCollider(int i) {
+    assert(i < this->m_colliders.size());
+
+    return &this->m_colliders[i];
+}
+
+int Object::getNumColliders() {
+    return this->m_colliders.size();
 }
 
 void Object::setPosition(double x, double y) {
@@ -105,21 +122,41 @@ void Object::turnRight() {
     this->m_isLeft = false;
 }
 
+void Object::turnOther() {
+    this->m_isLeft = !this->m_isLeft;
+}
+
 void Object::updatePosition() {
     this->m_position.x += this->m_vector.x;
     this->m_position.y += this->m_vector.y;
 }
 
 void Object::setIsGround(bool flag) {
-    this->m_IsGround = flag;
+    this->m_isGround = flag;
 }
 
-bool Object::getIsGround() {
-    return this->m_IsGround;
+void Object::setIsWall(bool flag) {
+    this->m_isWall = flag;
+}
+
+bool Object::isGround() {
+    return this->m_isGround;
+}
+
+bool Object::isWall() {
+    return this->m_isWall;
 }
 
 void Object::setGravity(double g) {
     this->m_gravity = g;
+}
+
+void Object::setTag(string tag) {
+    this->m_tag = tag;
+}
+
+bool Object::compareTag(string tag) {
+    return (tag == this->m_tag);
 }
 
 void Object::draw(Game* game, Vector2d cameraPos) {
@@ -128,4 +165,19 @@ void Object::draw(Game* game, Vector2d cameraPos) {
         this->m_position.x - cameraPos.x,
         this->m_position.y - cameraPos.y,
         true, this->m_isLeft);
+}
+
+void Object::initParams() {
+    this->m_animNum = 0;
+    this->m_animIndex = 0;
+    this->m_lastAnimNum = 0;
+    this->m_lastTime = clock();
+    this->m_width = 0;
+    this->m_height = 0;
+    this->m_position.x = 0;
+    this->m_position.y = 0;
+    this->m_vector.x = 0;
+    this->m_vector.y = 0;
+    this->m_isLeft = false;
+    this->m_colliderIndex = 0;
 }

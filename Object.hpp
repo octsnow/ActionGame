@@ -1,10 +1,15 @@
 #pragma once
+
+#include <string>
+
 #include "OctGame/OctGame.hpp"
 #include "Collider.hpp"
 
 class Object {
 public:
+    // Methods
     Object();
+    Object(std::string tag);
 
     int setImageHandle(clock_t time, std::vector<int> handles);
     int getImageHandle();
@@ -15,30 +20,46 @@ public:
     void setSize(int width, int height);
     int getWidth();
     int getHeight();
-    Collider* getCollider();
+
+    void appendCollider(Collider c);
+    void changeCollider(int i);
+    Collider* getCurrentCollider();
+    Collider* getCollider(int i);
+    int getNumColliders();
 
     void setPosition(double x, double y);
-    void translate(double x, double y);
     Vector2d getPosition();
+    void translate(double x, double y);
 
     void setVector(double x, double y);
-    void addVector(double x, double y);
     Vector2d getVector();
+    void addVector(double x, double y);
+
     void turnLeft();
     void turnRight();
+    void turnOther();
 
     void updatePosition();
 
     void setIsGround(bool flag);
-    bool getIsGround();
+    void setIsWall(bool flag);
+    bool isGround();
+    bool isWall();
 
     void setGravity(double g);
 
-    void init() {}
-    void update() {}
-    void draw(Game* game, Vector2d cameraPos);
+    void setTag(std::string tag);
+    bool compareTag(std::string tag);
 
+    virtual void init() {};
+    virtual void update() {};
+    virtual void onCollision(Object obj, HitBox hb) {};
+    void draw(Game* game, Vector2d cameraPos);
 protected:
+    // Methods
+    void initParams();
+
+    // Variables
     std::vector<clock_t> m_animationTimes;
     std::vector<std::vector<int>> m_imageHandles;
 
@@ -54,7 +75,11 @@ protected:
     bool m_isLeft;
 
     double m_gravity;
-    bool m_IsGround;
+    bool m_isGround;
+    bool m_isWall;
 
-    Collider m_collider;
+    std::vector<Collider> m_colliders;
+    int m_colliderIndex;
+
+    std::string m_tag;
 };

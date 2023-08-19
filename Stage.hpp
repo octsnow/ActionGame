@@ -13,6 +13,7 @@ public:
 	Vector2d adjustVector(Object* obj);
 	CollisionType getColType(int blockNum);
     int checkHitBlock(Object* obj);
+    void draw(Game* game, Vector2d cameraPos);
 
 private:
     int* m_stage;

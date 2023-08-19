@@ -2,21 +2,24 @@
 #include <vector>
 #include "Util.hpp"
 
-class Rect {
+class HitBox {
 public:
-    bool checkHitRect(Rect target, Vector2d pos, Vector2d targetPos);
+    HitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack);
+    bool isHitBox(HitBox target, Vector2d pos, Vector2d targetPos);
 
     Vector2d pos;
     int width;
     int height;
+    const bool isPhysics;
+    const bool isAttack;
 };
 
 class Collider {
 public:
-    void addRect(Rect r);
-    std::vector<Rect> getRects();
+    void addHitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack);
+    std::vector<HitBox> getHitBoxes();
     bool checkHit(Collider target, Vector2d pos, Vector2d targetPos);
 
 private:
-    std::vector<Rect> m_collisionAreas;
+    std::vector<HitBox> m_collisionAreas;
 };

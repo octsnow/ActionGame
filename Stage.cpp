@@ -24,7 +24,7 @@ CollisionType Stage::getColType(int blockNum) {
 }
 
 Vector2d Stage::adjustVector(Object* obj){
-    Collider* pObjCollider = obj->getCollider();
+    Collider* pObjCollider = obj->getCurrentCollider();
     Vector2d objPos = obj->getPosition();
     Vector2d objVec = obj->getVector();
     Vector2d objNewPos = {
@@ -37,29 +37,31 @@ Vector2d Stage::adjustVector(Object* obj){
     int topBlkY, bottomBlkY, leftBlkX, rightBlkX;
     int checkBlkX, checkBlkY;
 
-    for(auto r : pObjCollider->getRects()) {
+    for(auto hitBox : pObjCollider->getHitBoxes()) {
+        if(!hitBox.isPhysics) continue;
+
         Vector2d rectWorld = {
-            objPos.x + r.pos.x,
-            objPos.y + r.pos.y
+            objPos.x + hitBox.pos.x,
+            objPos.y + hitBox.pos.y
         };
         Vector2d rectNewWorld = {
-            objNewPos.x + r.pos.x,
-            objNewPos.y + r.pos.y
+            objNewPos.x + hitBox.pos.x,
+            objNewPos.y + hitBox.pos.y
         };
 
         int const leftBlkX      = rectWorld.x / this->m_blockSize,
                   topBlkY       = rectWorld.y / this->m_blockSize,
-                  bottomBlkY    = (rectWorld.y + r.height - 1) / this->m_blockSize,
-                  rightBlkX     = (rectWorld.x + r.width - 1) / this->m_blockSize;
+                  bottomBlkY    = (rectWorld.y + hitBox.height - 1) / this->m_blockSize,
+                  rightBlkX     = (rectWorld.x + hitBox.width - 1) / this->m_blockSize;
 
         if(isFall){
-            checkBlkY = (rectNewWorld.y + r.height) / this->m_blockSize;
+            checkBlkY = (rectNewWorld.y + hitBox.height) / this->m_blockSize;
         }else{
             checkBlkY = (rectNewWorld.y - 1) / this->m_blockSize;
         }
 
         if(isRight) {
-            checkBlkX = (rectNewWorld.x + r.width) / this->m_blockSize;
+            checkBlkX = (rectNewWorld.x + hitBox.width) / this->m_blockSize;
         } else {
             checkBlkX = (rectNewWorld.x - 1) / this->m_blockSize;
         }
@@ -70,7 +72,7 @@ Vector2d Stage::adjustVector(Object* obj){
             }
             if(this->getColType(this->m_stage[i]) == CollisionType::BLOCK) {
                 if(isRight) {
-                    double tmp = (checkBlkX * this->m_blockSize) - (rectWorld.x + r.width);
+                    double tmp = (checkBlkX * this->m_blockSize) - (rectWorld.x + hitBox.width);
                     if(tmp < objNewVec.x) {
                         objNewVec.x = tmp;
                     }
@@ -86,8 +88,8 @@ Vector2d Stage::adjustVector(Object* obj){
         
         int offset = checkBlkY * this->m_stageWidth;
 
-        if(rectNewWorld.y + r.height >= this->m_screenHeight) {
-            objNewVec.y = this->m_screenHeight - (rectWorld.y + r.height);
+        if(rectNewWorld.y + hitBox.height >= this->m_screenHeight) {
+            objNewVec.y = this->m_screenHeight - (rectWorld.y + hitBox.height);
             continue;
         }
 
@@ -98,7 +100,7 @@ Vector2d Stage::adjustVector(Object* obj){
             }
             if(0 < this->m_stage[i] && this->m_stage[i] < 3) {
                 if(isFall) {
-                    double tmp = (checkBlkY * this->m_blockSize) - (rectWorld.y + r.height);
+                    double tmp = (checkBlkY * this->m_blockSize) - (rectWorld.y + hitBox.height);
                     if(tmp < objNewVec.y) {
                         objNewVec.y = tmp;
                     }
@@ -127,6 +129,30 @@ int Stage::checkHitBlock(Object* obj) {
 
     obj->setVector(newVec.x, newVec.y);
     obj->setIsGround(vec.y > newVec.y);
+    obj->setIsWall(abs(vec.x) > abs(newVec.x));
 
     return flag;
+}
+
+void Stage::draw(Game* game, Vector2d cameraPos) {
+    for(int y = 0; y < this->m_screenHeight && y < this->m_screenHeight / this->m_blockSize + 1; y++){
+        for(int x = 0; x < this->m_stageWidth && x < this->m_screenWidth / this->m_blockSize + 1; x++){
+            int x1 = x * this->m_blockSize - static_cast<int>(cameraPos.x) % this->m_blockSize,
+                y1 = y * this->m_blockSize,
+                x2 = (x + 1) * this->m_blockSize - static_cast<int>(cameraPos.x) % this->m_blockSize,
+                y2 = (y + 1) * this->m_blockSize;
+            int idx = y * this->m_stageWidth + x + cameraPos.x / this->m_blockSize;
+
+            if(idx < 0 || this->m_stageWidth * this->m_stageHeight <= idx) continue;
+            switch(this->m_stage[idx]){
+            case 1:
+//                game->drawImage(gGlassBlock, x1, y1);
+                game->drawBox(x1, y1, x2, y2, 0x00FFFF);
+                break;
+            case 2:
+                game->drawBox(x1, y1, x2, y2, 0xFFFF00);
+                break;
+            }
+        }
+    }
 }

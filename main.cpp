@@ -7,6 +7,7 @@
 #include "OctGame/OctGame.hpp"
 #include "Util.hpp"
 #include "Object.hpp"
+#include "Item.hpp"
 #include "Player.hpp"
 #include "Enemy.hpp"
 #include "Stage.hpp"
@@ -33,11 +34,15 @@ using namespace std;
 
 #define OBJECT_COIN 0
 
+enum class Tag {
+    Player = 1,
+    Enemy,
+    Coin
+};
 const int FrameTime = 1000 / FPS;
 
 typedef struct {
     bool a, d, space;
-    bool key[256];
 } KeyState;
 
 struct {
@@ -45,18 +50,18 @@ struct {
 } gSysInf;
 
 struct {
-    KeyState ks = {false, false};
+    KeyState key = {false, false};
     unsigned int money = 0;
+    unsigned int HP = 100;
 } gGameInfo;
 
 int g1yenImgHandle;
 int gGlassBlock;
 Game game;
 Stage stage;
-LinkedList<Object> objList;
+LinkedList<Object*> objList;
 
-Player gPlayer;
-Enemy gEnemy;
+Player* gPlayer;
 
 int gStage[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -73,28 +78,24 @@ int gStage[] = {
     0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-void drawStage(){
-    int scwHlf = SCREEN_W / 2;
-    int schHlf = SCREEN_H / 2;
-    Vector2d pPos = gPlayer.getPosition();
-    int offX = pPos.x > scwHlf ? (pPos.x < STAGE_W * BLOCK_SIZE - scwHlf ? pPos.x - scwHlf : STAGE_W * BLOCK_SIZE - SCREEN_W) : 0;
-    for(int y = 0; y < STAGE_H && y < SCREEN_H / BLOCK_SIZE + 1; y++){
-        for(int x = 0; x < STAGE_W && x < SCREEN_W / BLOCK_SIZE + 1; x++){
-            int x1 = x * BLOCK_SIZE - offX % BLOCK_SIZE,
-                y1 = y * BLOCK_SIZE,
-                x2 = (x + 1) * BLOCK_SIZE - offX % BLOCK_SIZE,
-                y2 = (y + 1) * BLOCK_SIZE;
-            int idx = y * STAGE_W + x + offX / BLOCK_SIZE;
+void isHitAttack() {
+    Vector2d pPos = gPlayer->getPosition();
 
-            if(idx < 0 || STAGE_W * STAGE_H <= idx) continue;
-            switch(gStage[idx]){
-            case 1:
-                game.drawImage(gGlassBlock, x1, y1);
-                break;
-            case 2:
-                game.drawBox(x1, y1, x2, y2, 0xFFFF00);
-                break;
-            }
+    for(auto pHitBox : gPlayer->getCurrentCollider()->getHitBoxes()) {
+        if(pHitBox.isAttack) {
+            objList.for_each([&](auto node) {
+                Object* obj = (*node)->m_value;
+                
+                if(obj->compareTag("Enemy")) {
+                    Vector2d ePos = obj->getPosition();
+
+                    for(auto eHitBox : obj->getCurrentCollider()->getHitBoxes()) {
+                        if(pHitBox.isHitBox(eHitBox, pPos, ePos)) {
+                            obj->onCollision(*gPlayer, pHitBox);
+                        }
+                    }
+                }
+            });
         }
     }
 }
@@ -104,71 +105,76 @@ void update() {
     Vector2d pPos, pVec;
     
     // move when a or d is pressed
-    if(gGameInfo.ks.key['a']) {
-        gPlayer.addVector(-1, 0);
-        gPlayer.turnLeft();
-        if(gPlayer.getVector().x < -MAX_SPEED_X) {
-            gPlayer.setVector(-MAX_SPEED_X, gPlayer.getVector().y);
+    if(game.isPressed('a')) {
+        gPlayer->addVector(-1, 0);
+        gPlayer->turnLeft();
+        if(gPlayer->getVector().x < -MAX_SPEED_X) {
+            gPlayer->setVector(-MAX_SPEED_X, gPlayer->getVector().y);
         }
         isMove = true;
     }
-    if(gGameInfo.ks.key['d']) {
-        gPlayer.addVector(1, 0);
-        gPlayer.turnRight();
-        if(gPlayer.getVector().x > MAX_SPEED_X) {
-            gPlayer.setVector(MAX_SPEED_X, gPlayer.getVector().y);
+    if(game.isPressed('d')) {
+        gPlayer->addVector(1, 0);
+        gPlayer->turnRight();
+        if(gPlayer->getVector().x > MAX_SPEED_X) {
+            gPlayer->setVector(MAX_SPEED_X, gPlayer->getVector().y);
         }
         isMove = true;
     }
-
-    stage.checkHitBlock(&gPlayer);
-    if(stage.checkHitBlock(&gEnemy) & 2) {
-        gEnemy.setVector(-1, 0);
+    if(game.isDown('j')) {
+        gPlayer->attack();
     }
 
-    gPlayer.updatePosition();
-    gEnemy.updatePosition();
-
-    if(gGameInfo.ks.key[' '] && gPlayer.getIsGround()) {
-        gPlayer.setVector(gPlayer.getVector().x, -JUNP_SPEED);
+    if(game.isPressed(' ') && gPlayer->isGround()) {
+        gPlayer->setVector(gPlayer->getVector().x, -JUNP_SPEED);
     }
-    pVec = gPlayer.getVector();
-
+ 
+    pVec = gPlayer->getVector();
     if(isMove) {
-        gPlayer.setAnimationNum(1);
+        gPlayer->setAnimationNum(1);
     } else {
-        gPlayer.addVector(-(gPlayer.getVector().x != 0 ? ((int)(gPlayer.getVector().x > 0) * 2 - 1) : 0), 0);
-        gPlayer.setAnimationNum(0);
+        gPlayer->addVector(-(pVec.x != 0 ? ((int)(pVec.x > 0) * 2 - 1) : 0), 0);
+        gPlayer->setAnimationNum(0);
     }
-
-    drawStage();
 
     // calculate camera position
-    pPos = gPlayer.getPosition();
+    pPos = gPlayer->getPosition();
     Vector2d cameraPos;
-    cameraPos.x = pPos.x < SCREEN_W / 2 ? 0 : (pPos.x > STAGE_W * BLOCK_SIZE - SCREEN_W / 2 ? STAGE_W * BLOCK_SIZE - SCREEN_W : pPos.x - SCREEN_W / 2);
+    if(pPos.x < static_cast<int>(SCREEN_W / 2)) {
+        cameraPos.x = 0;
+    } else if(pPos.x > STAGE_W * BLOCK_SIZE - static_cast<int>(SCREEN_W / 2)) {
+        cameraPos.x = STAGE_W * BLOCK_SIZE - SCREEN_W;
+    } else {
+        cameraPos.x = pPos.x - static_cast<int>(SCREEN_W / 2);
+    }
     cameraPos.y = 0;
-
-    // draw
-    gPlayer.draw(&game, cameraPos);
-    gEnemy.draw(&game, cameraPos);
+ 
     objList.for_each([&](auto node) {
-        Vector2d oPos = (*node)->m_value.getPosition();
-        (*node)->m_value.draw(&game, cameraPos);
+            Object* obj = (*node)->m_value;
+            stage.checkHitBlock(obj);
+            obj->updatePosition();
+            obj->draw(&game, cameraPos);
+            obj->update();
     });
 
-    vector<LinkedNode<Object>**> hits = checkHitObject(gPlayer, objList);
-    for(auto o : hits) {
-        if((*o)->m_value.getImageHandle() == g1yenImgHandle) {
-            gGameInfo.money++;
+    stage.draw(&game, cameraPos);
 
+    vector<LinkedNode<Object*>**> hits = checkHitObject(*gPlayer, objList);
+    for(auto o : hits) {
+        if((*o)->m_value->compareTag("Enemy")) {
+            gGameInfo.HP--;
+        } else if((*o)->m_value->compareTag("Item")) {
+            gGameInfo.money++;
             objList.remove(o);
         }
     }
 
-    gPlayer.update();
-    gEnemy.update();
-    game.text(0, 0, "%d coin", gGameInfo.money);
+    isHitAttack();
+
+    game.text(0, 0, "coin: %d", gGameInfo.money);
+    game.text(100, 0, "HP: %d", gGameInfo.HP);
+
+    game.update();
 }
 
 void idle() {
@@ -198,71 +204,83 @@ void resize(int w, int h) {
     glMatrixMode(GL_MODELVIEW);
 }
 
-void init() {
+void init(int argc, char** argv) {
+    Enemy* enemy;
+    Item* oneYen;
+    Collider eCol, cCol;
+
+    gPlayer = new Player();
+    enemy = new Enemy();
+    oneYen = new Item();
+
+    // load image
+    gPlayer->setImageHandle(0, {
+        game.loadImage("images/player.bmp", true)});
+    gPlayer->setImageHandle(80, {
+        game.loadImage("images/player_walk0.bmp", true),
+        game.loadImage("images/player_walk1.bmp", true),
+        game.loadImage("images/player_walk2.bmp", true),
+        game.loadImage("images/player_walk3.bmp", true)});
+    enemy->setImageHandle(0, {
+        game.loadImage("images/slime.bmp", true)});
+    oneYen->setImageHandle(0, {
+        game.loadImage("images/1-yen.bmp",
+        BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f)});
+    gGlassBlock = game.loadRegionImage(
+        "images/mapchip2_0724/mapchip2/MapChip/kabe-ue_dungeon1.png",
+        BLOCK_SIZE / 16.0f, BLOCK_SIZE / 16.0f, 16, 16, 3, true);
+
+    enemy->setSize(50, 50);
+    enemy->setPosition(30, 0);
+
+    oneYen->setSize(50, 50);
+    oneYen->setPosition(BLOCK_SIZE * 12, SCREEN_H - BLOCK_SIZE * 5);
+
+    gPlayer->setGravity(GRAVITY);
+    enemy->setGravity(GRAVITY);
+
+    eCol.addHitBox({0, 0}, 50, 50, true, false);
+    cCol.addHitBox({0, 0}, 50, 50, true, false);
+    enemy->appendCollider(eCol);
+    oneYen->appendCollider(cCol);
+
+    stage.setStage(gStage, STAGE_W, STAGE_H, BLOCK_SIZE);
+    stage.setScreenSize(SCREEN_W, SCREEN_H);
+
+    game.init(&argc, argv, SCREEN_W, SCREEN_H);
+    game.displayFunc(display);
+    game.reshapeFunc(resize);
+    game.idleFunc(idle);
+
+    objList.append(oneYen);
+    objList.append(gPlayer);
+    objList.append(enemy);
+    objList.for_each([&](auto node) {
+            Object* obj = (*node)->m_value;
+            obj->init();
+    });
+
     glClearColor(0.0, 0.0, 1.0, 0.0);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 }
 
-void key(unsigned char key, int x, int y) {
-    gGameInfo.ks.key[(int)key] = true;
-}
+void term() {
+    game.destroy();
+    objList.for_each([&](auto node) {
+        Object* obj = (*node)->m_value;
 
-void keyUp(unsigned char key, int x, int y) {
-    gGameInfo.ks.key[(int)key] = false;
+        if(obj != nullptr) {
+            delete obj;
+        }
+    });
 }
 
 int main(int argc, char** argv) {
-    gPlayer.setImageHandle(0, {
-          game.loadImage("images/player.bmp", true)});
-    gPlayer.setImageHandle(80, {
-          game.loadImage("images/player_walk0.bmp", true),
-          game.loadImage("images/player_walk1.bmp", true),
-          game.loadImage("images/player_walk2.bmp", true),
-          game.loadImage("images/player_walk3.bmp", true)});
-    gPlayer.setSize(70, 100);
-    gPlayer.getCollider()->addRect({{10, 0}, 50, 100});
-
-    gEnemy.setImageHandle(0, {
-          game.loadImage("images/slime.bmp", true)});
-    gEnemy.setSize(50, 50);
-    gEnemy.setPosition(30, 0);
-    gEnemy.getCollider()->addRect({{0, 0}, 50, 50});
-
-    g1yenImgHandle = game.loadImage(
-          "images/1-yen.bmp",
-          BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f);
-    gGlassBlock = game.loadRegionImage(
-          "images/mapchip2_0724/mapchip2/MapChip/kabe-ue_dungeon1.png",
-          BLOCK_SIZE / 16.0f, BLOCK_SIZE / 16.0f, 16, 16, 3, true);
-
-    game.init(&argc, argv, SCREEN_W, SCREEN_H);
-
-    game.displayFunc(display);
-    game.reshapeFunc(resize);
-    game.idleFunc(idle);
-    game.keyboardFunc(key);
-    game.keyboardUpFunc(keyUp);
-
-    stage.setStage(gStage, STAGE_W, STAGE_H, BLOCK_SIZE);
-    stage.setScreenSize(SCREEN_W, SCREEN_H);
-
-    gPlayer.setGravity(GRAVITY);
-    gEnemy.setGravity(GRAVITY);
-    Object oneYen;
-    oneYen.setImageHandle(0, {g1yenImgHandle});
-    oneYen.setSize(50, 50);
-    oneYen.setPosition(BLOCK_SIZE * 12, SCREEN_H - BLOCK_SIZE * 5);
-    oneYen.getCollider()->addRect({{0, 0}, 50, 50});
-
-    objList.append(oneYen);
-
-    init();
-
+    init(argc, argv);
     glutMainLoop();
-
-    game.destroy();
+    term();
 
     return 0;
 }

@@ -1,6 +1,31 @@
 #include "OctGame.hpp"
 #include <stdarg.h>
 
+using namespace std;
+
+bool pressedKeys[256];
+bool upKeys[256];
+bool downKeys[256];
+
+namespace {
+    void key(unsigned char key, int x, int y) {
+        if(!pressedKeys[(int)key]) {
+            downKeys[(int)key] = true;
+        }
+        pressedKeys[(int)key] = true;
+    }
+
+    void keyUp(unsigned char key, int x, int y) {
+        upKeys[(int)key] = true;
+        pressedKeys[(int)key] = false;
+    }
+
+    void resetKeys() {
+        memset(upKeys, 0, sizeof(upKeys));
+        memset(downKeys, 0, sizeof(downKeys));
+    }
+}
+
 void Game::init(int* argc, char** argv, int width, int height) {
     this->m_width = width;
     this->m_height = height;
@@ -10,7 +35,10 @@ void Game::init(int* argc, char** argv, int width, int height) {
     glutInit(argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
     glutCreateWindow(argv[0]);
-      
+     
+    glutKeyboardFunc(key);
+    glutKeyboardUpFunc(keyUp);
+ 
     BITMAPINFO bmi;
     ZeroMemory(&bmi, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -45,6 +73,10 @@ void Game::init(int* argc, char** argv, int width, int height) {
     SelectObject(this->m_hDC, this->m_hFont);
 }
 
+void Game::update() {
+    resetKeys();
+}
+
 void Game::displayFunc(void (*func)(void)) {
     glutDisplayFunc(func);
 }
@@ -55,14 +87,6 @@ void Game::reshapeFunc(void (*func)(int, int)) {
 
 void Game::idleFunc(void (*func)(void)) {
     glutIdleFunc(func);
-}
-
-void Game::keyboardFunc(void (*func)(unsigned char, int, int)) {
-    glutKeyboardFunc(func);
-}
-
-void Game::keyboardUpFunc(void (*func)(unsigned char, int, int)) {
-    glutKeyboardUpFunc(func);
 }
 
 void Game::destroy() {
@@ -154,7 +178,7 @@ void Game::text(int x, int y, const char* format, ...) {
     vsprintf_s(buf, 256, format, ap);
     va_end(ap);
 
-    TextOut(this->m_hDC, 0, 0, buf, lstrlen(buf));
+    TextOut(this->m_hDC, x, y, buf, lstrlen(buf));
 }
 
 void Game::clearScreen(){
@@ -164,4 +188,16 @@ void Game::clearScreen(){
 void Game::screenSwap() {
     glDrawPixels(this->m_width, this->m_height, GL_RGB, GL_UNSIGNED_BYTE, this->m_screen );
     glutSwapBuffers();
+}
+
+bool Game::isPressed(char key) {
+    return pressedKeys[(int)key];
+}
+
+bool Game::isUp(char key) {
+    return upKeys[(int)key];
+}
+
+bool Game::isDown(char key) {
+    return downKeys[(int)key];
 }

@@ -42,7 +42,7 @@ public:
         LinkedNode<T>* newNode = new LinkedNode<T>(v);
         
         if(this->m_head != nullptr) {
-            newNode->m_next = this->m_head->m_next;
+            newNode->m_next = this->m_head;
         }
         this->m_head = newNode;
     }

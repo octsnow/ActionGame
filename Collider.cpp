@@ -2,20 +2,29 @@
 
 using namespace std;
 
-void Collider::addRect(Rect r) {
-    this->m_collisionAreas.push_back(r);
+HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack)
+    : pos(pos)
+    , width(width)
+    , height(height)
+    , isPhysics(isPhysics)
+    , isAttack(isAttack) {
 }
 
-vector<Rect> Collider::getRects() {
+void Collider::addHitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack) {
+    HitBox hb(pos, width, height, isPhysics, isAttack);
+    this->m_collisionAreas.push_back(hb);
+}
+
+vector<HitBox> Collider::getHitBoxes() {
     return this->m_collisionAreas;
 }
 
 bool Collider::checkHit(Collider target, Vector2d pos, Vector2d targetPos)  {
-    vector<Rect> targetRects = target.getRects();
+    vector<HitBox> targetHitBoxs = target.getHitBoxes();
 
-    for(Rect r : this->m_collisionAreas) {
-        for(Rect tr : targetRects) {
-            if(r.checkHitRect(tr, pos, targetPos)) {
+    for(HitBox r : this->m_collisionAreas) {
+        for(HitBox tr : targetHitBoxs) {
+            if(r.isHitBox(tr, pos, targetPos)) {
                 return true;
             }
         }
@@ -24,7 +33,7 @@ bool Collider::checkHit(Collider target, Vector2d pos, Vector2d targetPos)  {
     return false;
 }
 
-bool Rect::checkHitRect(Rect target, Vector2d pos, Vector2d targetPos){
+bool HitBox::isHitBox(HitBox target, Vector2d pos, Vector2d targetPos){
     int lx, ly, lw, lh, hx, hy;
     Vector2d worldPos, worldTargetPos;
 
@@ -55,5 +64,3 @@ bool Rect::checkHitRect(Rect target, Vector2d pos, Vector2d targetPos){
 
     return ( lx <= hx && hx < lx + lw ) && ( ly <= hy && hy < ly + lh );
 }
-
-
