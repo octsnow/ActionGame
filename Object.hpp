@@ -54,7 +54,7 @@ public:
     virtual void init() {};
     virtual void update() {};
     virtual void onCollision(Object obj, HitBox hb) {};
-    void draw(Game* game, Vector2d cameraPos);
+    virtual void draw(Game* game, Vector2d cameraPos);
 protected:
     // Methods
     void initParams();
