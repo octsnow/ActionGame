@@ -5,6 +5,11 @@
 #include "OctGame/OctGame.hpp"
 #include "Collider.hpp"
 
+enum ObjMsg {
+    OBJMSG_DESTROY,
+    OBJMSG_NONE
+};
+
 class Object {
 public:
     // Methods
@@ -51,6 +56,10 @@ public:
     void setTag(std::string tag);
     bool compareTag(std::string tag);
 
+    // Message Que
+    void appendMessage(ObjMsg msg);
+    ObjMsg getMessage();
+
     virtual void init() {};
     virtual void update() {};
     virtual void onCollision(Object obj, HitBox hb) {};
@@ -82,4 +91,6 @@ protected:
     int m_colliderIndex;
 
     std::string m_tag;
+
+    Que<ObjMsg> m_msgQue;
 };

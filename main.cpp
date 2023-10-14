@@ -150,11 +150,11 @@ void update() {
     cameraPos.y = 0;
  
     objList.for_each([&](auto node) {
-            Object* obj = (*node)->m_value;
-            stage.checkHitBlock(obj);
-            obj->updatePosition();
-            obj->draw(&game, cameraPos);
-            obj->update();
+        Object* obj = (*node)->m_value;
+        stage.checkHitBlock(obj);
+        obj->updatePosition();
+        obj->draw(&game, cameraPos);
+        obj->update();
     });
 
     stage.draw(&game, cameraPos);
@@ -173,6 +173,30 @@ void update() {
 
     game.text(0, 0, "coin: %d", gGameInfo.money);
     game.text(100, 0, "HP: %d", gGameInfo.HP);
+
+    vector<LinkedNode<Object*>**> destroyObjects;
+    objList.for_each([&](auto node) {
+        Object* obj = (*node)->m_value;
+        while(true) {
+            ObjMsg msg = obj->getMessage();
+
+            if(msg == OBJMSG_NONE) {
+                break;
+            }
+
+            switch(msg) {
+            case OBJMSG_DESTROY:
+                destroyObjects.push_back(node);
+                break;
+            default:
+                break;
+            }
+        }
+    });
+
+    for(auto node : destroyObjects) {
+        objList.remove(node);
+    }
 
     game.update();
 }

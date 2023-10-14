@@ -71,3 +71,58 @@ public:
 private:
     LinkedNode<T>* m_head;
 };
+
+template<typename T>
+class Que {
+public:
+    Que() {
+        this->m_head = nullptr;
+        this->m_tail = nullptr;
+    }
+
+    ~Que() {
+        LinkedNode<T>* node = this->m_head;
+        while(node != nullptr) {
+            LinkedNode<T>* nextNode = node->m_next;
+            delete node;
+            node = nextNode;
+        }
+
+        this->m_head = nullptr;
+        this->m_tail = nullptr;
+    }
+
+    void append(T v) {
+        LinkedNode<T>* node = new LinkedNode<T>(v);
+
+        if(this->m_tail == nullptr) {
+            this->m_head = node;
+            this->m_tail = node;
+        } else {
+            node->m_next = this->m_tail;
+            this->m_tail = node;
+        }
+    }
+
+    T* getValue() {
+        if(this->m_head == nullptr) {
+            return nullptr;
+        }
+
+        return &this->m_head->m_value;
+    }
+
+    void pop() {
+        LinkedNode<T>* node = this->m_head;
+
+        if(node == nullptr) {
+            return;
+        }
+
+        this->m_head = node->m_next;
+        delete node;
+    }
+
+private:
+    LinkedNode<T> *m_head, *m_tail;
+};

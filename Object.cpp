@@ -159,6 +159,24 @@ bool Object::compareTag(string tag) {
     return (tag == this->m_tag);
 }
 
+void Object::appendMessage(ObjMsg msg) {
+    if(msg == ObjMsg::OBJMSG_NONE) return;
+
+    this->m_msgQue.append(msg);
+}
+
+ObjMsg Object::getMessage() {
+    ObjMsg* pMsg = this->m_msgQue.getValue();
+    if(pMsg == nullptr) {
+        return OBJMSG_NONE;
+    }
+
+    ObjMsg msg = *pMsg;
+    this->m_msgQue.pop();
+
+    return msg;
+}
+
 void Object::draw(Game* game, Vector2d cameraPos) {
     game->drawImage(
         this->getImageHandle(),
