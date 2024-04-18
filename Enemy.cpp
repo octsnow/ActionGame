@@ -31,7 +31,7 @@ void Enemy::update() {
     }
 }
 
-void Enemy::draw(Game* game, Vector2d cameraPos) {
+void Enemy::draw(OctGame* game, Vector2d cameraPos) {
     Object::draw(game, cameraPos);
     int hpWidth = this->m_width * ((float)this->m_HP / this->m_maxHP);
 

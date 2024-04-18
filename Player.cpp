@@ -26,14 +26,14 @@ void Player::update() {
         this->m_vector.y = MAX_SPEED_Y;
     }
 
-    if(this->isAttacking) {
+    if(this->attackFlag) {
         this->attackCountTime += clock() - g_lastTime;
         g_lastTime = clock();
 
         if(this->attackCountTime > 300) {
             this->changeCollider(0);
             this->attackCountTime = 0;
-            this->isAttacking = false;
+            this->attackFlag = false;
         }
     }
 }
@@ -42,7 +42,11 @@ void Player::attack() {
     g_lastTime = clock();
     this->changeCollider(1);
     this->attackCountTime = 0;
-    this->isAttacking = true;
+    this->attackFlag = true;
+}
+
+bool Player::isAttacking() {
+    return this->attackFlag;
 }
 
 vector<LinkedNode<Object*>**> checkHitObject(Player player, LinkedList<Object*>& objList) {

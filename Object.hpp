@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <queue>
 
 #include "OctGame/OctGame.hpp"
 #include "Collider.hpp"
@@ -63,7 +64,7 @@ public:
     virtual void init() {};
     virtual void update() {};
     virtual void onCollision(Object obj, HitBox hb) {};
-    virtual void draw(Game* game, Vector2d cameraPos);
+    virtual void draw(OctGame* game, Vector2d cameraPos);
 protected:
     // Methods
     void initParams();
@@ -92,5 +93,5 @@ protected:
 
     std::string m_tag;
 
-    Que<ObjMsg> m_msgQue;
+    std::queue<ObjMsg> m_msgQue;
 };

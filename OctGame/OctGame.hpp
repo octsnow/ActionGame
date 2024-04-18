@@ -4,7 +4,7 @@
 #include <string>
 #include "ImageManager.hpp"
 
-class Game {
+class OctGame {
 public:
     void init(int* argc, char** argv, int width, int height);
     void destroy();

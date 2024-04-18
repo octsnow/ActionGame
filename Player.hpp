@@ -6,9 +6,11 @@ public:
     void init();
     void update();
     void attack();
+
+    bool isAttacking();
 private:
     clock_t attackCountTime;
-    bool isAttacking;
+    bool attackFlag;
 };
 
 vector<LinkedNode<Object*>**> checkHitObject(Player player, LinkedList<Object*>& objList);

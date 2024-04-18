@@ -162,22 +162,21 @@ bool Object::compareTag(string tag) {
 void Object::appendMessage(ObjMsg msg) {
     if(msg == ObjMsg::OBJMSG_NONE) return;
 
-    this->m_msgQue.append(msg);
+    this->m_msgQue.push(msg);
 }
 
 ObjMsg Object::getMessage() {
-    ObjMsg* pMsg = this->m_msgQue.getValue();
-    if(pMsg == nullptr) {
+    if(this->m_msgQue.size() == 0) {
         return OBJMSG_NONE;
     }
 
-    ObjMsg msg = *pMsg;
+    ObjMsg msg = this->m_msgQue.front();
     this->m_msgQue.pop();
 
     return msg;
 }
 
-void Object::draw(Game* game, Vector2d cameraPos) {
+void Object::draw(OctGame* game, Vector2d cameraPos) {
     game->drawImage(
         this->getImageHandle(),
         this->m_position.x - cameraPos.x,

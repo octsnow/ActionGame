@@ -3,8 +3,12 @@
 namespace {
 };
 
-void Stage::setStage(int* stage, int width, int height, int blockSize) {
-    this->m_stage = stage;
+void Stage::setStage(const int* stage, int width, int height, int blockSize) {
+    this->m_stage.resize(width * height);
+    for(int i = 0; i < width * height; i++) {
+        this->m_stage[i] = stage[i];
+    }
+
     this->m_stageWidth = width;
     this->m_stageHeight = height;
     this->m_blockSize = blockSize;
@@ -134,7 +138,7 @@ int Stage::checkHitBlock(Object* obj) {
     return flag;
 }
 
-void Stage::draw(Game* game, Vector2d cameraPos) {
+void Stage::draw(OctGame* game, Vector2d cameraPos) {
     for(int y = 0; y < this->m_screenHeight && y < this->m_screenHeight / this->m_blockSize + 1; y++){
         for(int x = 0; x < this->m_stageWidth && x < this->m_screenWidth / this->m_blockSize + 1; x++){
             int x1 = x * this->m_blockSize - static_cast<int>(cameraPos.x) % this->m_blockSize,
