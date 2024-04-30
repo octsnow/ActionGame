@@ -2,13 +2,28 @@
 
 #include <string>
 #include <queue>
+#include <vector>
+#include <tuple>
 
 #include "OctGame/OctGame.hpp"
 #include "Collider.hpp"
 
-enum ObjMsg {
-    OBJMSG_DESTROY,
-    OBJMSG_NONE
+class Object;
+class ObjectList;
+class LQTData;
+class LinearQuaternaryTree;
+
+struct ObjectListData{
+    Object* pObject;
+    std::vector<LinkedNode<LQTData>*> lqtNodes;
+};
+
+typedef LinkedList<LQTData> LQTNode;
+typedef LinkedNode<LQTData> LQTNodeNode;
+
+enum ObjectMessage {
+    OBJECTMESSAGE_DESTROY,
+    OBJECTMESSAGE_NONE
 };
 
 class Object {
@@ -17,81 +32,130 @@ public:
     Object();
     Object(std::string tag);
 
-    int setImageHandle(clock_t time, std::vector<int> handles);
-    int getImageHandle();
+    int SetImageHandle(clock_t time, std::vector<int> handles);
+    int GetImageHandle();
 
-    void setAnimationNum(int n);
-    void setAnimationIndex(int i);
+    void SetAnimationNum(int n);
+    void SetAnimationIndex(int i);
 
-    void setSize(int width, int height);
-    int getWidth();
-    int getHeight();
+    void SetSize(int width, int height);
+    int GetWidth() const;
+    int GetHeight() const;
 
-    void appendCollider(Collider c);
-    void changeCollider(int i);
-    Collider* getCurrentCollider();
-    Collider* getCollider(int i);
-    int getNumColliders();
+    void AppendCollider(Collider c);
+    void SwitchCollider(int i);
+    Collider* GetCurrentCollider();
+    Collider* GetCollider(int i);
+    int GetNumColliders() const;
 
-    void setPosition(double x, double y);
-    Vector2d getPosition();
-    void translate(double x, double y);
+    void SetPosition(double x, double y);
+    Vector2d GetPosition() const;
+    void Translate(double x, double y);
 
-    void setVector(double x, double y);
-    Vector2d getVector();
-    void addVector(double x, double y);
+    void SetVector(double x, double y);
+    Vector2d GetVector() const;
+    void AddVector(double x, double y);
 
-    void turnLeft();
-    void turnRight();
-    void turnOther();
+    void TurnLeft();
+    void TurnRight();
+    void TurnOther();
 
-    void updatePosition();
+    void UpdatePosition();
 
-    void setIsGround(bool flag);
-    void setIsWall(bool flag);
-    bool isGround();
-    bool isWall();
+    void SetIsGround(bool flag);
+    void SetIsWall(bool flag);
+    void SetNotMoved();
+    bool IsGround();
+    bool IsWall();
+    bool IsMoved();
 
-    void setGravity(double g);
+    void SetGravity(double gravity);
 
-    void setTag(std::string tag);
-    bool compareTag(std::string tag);
+    void SetTag(std::string tag);
+    bool CompareTag(std::string tag) const;
 
-    // Message Que
-    void appendMessage(ObjMsg msg);
-    ObjMsg getMessage();
+    // Message Queue
+    void PushMessage(ObjectMessage message);
+    ObjectMessage PopMessage();
 
-    virtual void init() {};
-    virtual void update() {};
-    virtual void onCollision(Object obj, HitBox hb) {};
-    virtual void draw(OctGame* game, Vector2d cameraPos);
+    // Object Queue
+    void PushObject(Object* pObject);
+    Object* PopObject();
+
+    virtual void Init(OctGame* pOctGame) {};
+    virtual void Update() {};
+    virtual void Draw(OctGame* game, Vector2d cameraPos);
+
+    // event call backs
+    virtual void HitObject(const Object* object, const HitBox* hitbox) {};
+
 protected:
     // Methods
-    void initParams();
+    void InitParams();
 
     // Variables
-    std::vector<clock_t> m_animationTimes;
-    std::vector<std::vector<int>> m_imageHandles;
+    std::vector<clock_t> mAnimationTimes;
+    std::vector<std::vector<int>> mImageHandles;
 
-    int m_animNum;
-    int m_animIndex;
-    int m_lastAnimNum;
+    int mAnimNum;
+    int mAnimIndex;
+    int mLastAnimNum;
 
-    clock_t m_lastTime;
+    clock_t mLastTime;
 
-    int m_width, m_height;
-    Vector2d m_position;
-    Vector2d m_vector;
-    bool m_isLeft;
+    int mWidth;
+    int mHeight;
+    Vector2d mPosition;
+    Vector2d mVector;
+    bool mIsLeft;
 
-    double m_gravity;
-    bool m_isGround;
-    bool m_isWall;
+    double mGravity;
+    bool mIsGround;
+    bool mIsWall;
 
-    std::vector<Collider> m_colliders;
-    int m_colliderIndex;
+    std::vector<Collider> mColliders;
+    int mColliderIndex;
+    std::string mTag;
+    std::queue<ObjectMessage> mMsgQue;
+    std::queue<Object*> mObjectQue;
 
-    std::string m_tag;
+    bool mIsMoved;
+};
 
-    std::queue<ObjMsg> m_msgQue;
+class LQTData{
+public:
+    LQTData() : hitbox(HitBox(0, 0, 0, 0, false, false)), pObject(nullptr), pList(nullptr) {}
+    LQTData(HitBox hitbox, Object* pObject, LQTNode* pList) : hitbox(hitbox), pObject(pObject), pList(pList) {}
+    HitBox hitbox;
+    Object* pObject;
+    LQTNode* pList;
+};
+
+class LinearQuaternaryTree {
+public:
+    LinearQuaternaryTree(int depth, unsigned int rootWidth, unsigned int rootHeight);
+    ~LinearQuaternaryTree();
+    std::vector<LQTNodeNode*> Append(Object* object);
+    void checkHit() const;
+
+private:
+    LQTNode* mTree;
+    int mDepth;
+    unsigned int mRootWidth;
+    unsigned int mRootHeight;
+};
+
+class ObjectList {
+public:
+    ObjectList(unsigned int worldWidth, unsigned int worldHeight);
+    void AppendObject(Object* object);
+    void CheckHitObjects() const;
+    void Update(OctGame* pOctGame, Vector2d);
+    template <typename Func> void for_each(Func func) {
+        this->mObjectList.for_each(func);
+    }
+
+private:
+    LinkedList<ObjectListData> mObjectList;
+    LinearQuaternaryTree mHitBoxList;
 };

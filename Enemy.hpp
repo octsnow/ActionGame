@@ -2,16 +2,18 @@
 #include "OctGame/OctGame.hpp"
 #include "Object.hpp"
 
+class Object;
+
 class Enemy : public Object {
 public:
-    virtual void init() override;
-    virtual void update() override;
-    virtual void draw(OctGame* game, Vector2d cameraPos) override;
-    void damage();
+    virtual void Init(OctGame* pOctGame) override;
+    virtual void Update() override;
+    virtual void Draw(OctGame* game, Vector2d cameraPos) override;
+    void Damage();
 
-    virtual void onCollision(Object obj, HitBox hb) override;
+    virtual void HitObject(const Object* obj, const HitBox* hb) override;
 
 private:
-    int m_HP;
-    int m_maxHP;
+    int mHP;
+    int mMaxHP;
 };

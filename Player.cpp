@@ -3,67 +3,86 @@
 
 #define MAX_SPEED_Y 50
 
-clock_t g_lastTime;
+using namespace std;
 
-void Player::init() {
-    Collider pCol, pAtCol;
-    this->setSize(70, 100);
-    pCol.addHitBox({10, 0}, 50, 100, true, false);
-    pAtCol.addHitBox({10, 0}, 50, 100, true, false);
-    pAtCol.addHitBox({60, 0}, 20, 100, false, true);
 
-    this->appendCollider(pCol);
-    this->appendCollider(pAtCol);
 
-    this->setTag("Player");
+namespace {
+    clock_t g_lastTime;
 }
 
-void Player::update() {
-    this->addVector(0, this->m_gravity);
+void Player::Init(OctGame* pOctGame) {
+    Collider collider, attackCollider;
+    this->SetImageHandle(0, {
+        pOctGame->LoadImageFile("images/player.bmp", true)});
+    this->SetImageHandle(80, {
+        pOctGame->LoadImageFile("images/player_walk0.bmp", true),
+        pOctGame->LoadImageFile("images/player_walk1.bmp", true),
+        pOctGame->LoadImageFile("images/player_walk2.bmp", true),
+        pOctGame->LoadImageFile("images/player_walk3.bmp", true)});
+    this->SetImageHandle(150, {
+        pOctGame->LoadImageFile("images/player_punch0.bmp", true),
+        pOctGame->LoadImageFile("images/player_punch1.bmp", true)});
 
-    double vy = this->m_vector.y;
+    collider.AddHitBox(10, 0, 50, 100, true, false);
+    attackCollider.AddHitBox(10, 0, 50, 100, true, false);
+    attackCollider.AddHitBox(60, 0, 20, 100, false, true);
+    this->AppendCollider(collider);
+    this->AppendCollider(attackCollider);
+
+    this->SetSize(70, 100);
+    this->SetTag("Player");
+    this->mHP = 100;
+    this->mCoin = 0;
+}
+
+void Player::Update() {
+    this->AddVector(0, this->mGravity);
+
+    double vy = this->mVector.y;
     if(vy > MAX_SPEED_Y) {
-        this->m_vector.y = MAX_SPEED_Y;
+        this->mVector.y = MAX_SPEED_Y;
     }
 
-    if(this->attackFlag) {
-        this->attackCountTime += clock() - g_lastTime;
+    if(this->mAttackFlag) {
+        this->mAttackCountTime += clock() - g_lastTime;
         g_lastTime = clock();
 
-        if(this->attackCountTime > 300) {
-            this->changeCollider(0);
-            this->attackCountTime = 0;
-            this->attackFlag = false;
+        if(this->mAttackCountTime > 300) {
+            this->SwitchCollider(0);
+            this->mAttackCountTime = 0;
+            this->mAttackFlag = false;
         }
     }
 }
 
-void Player::attack() {
+void Player::Attack() {
     g_lastTime = clock();
-    this->changeCollider(1);
-    this->attackCountTime = 0;
-    this->attackFlag = true;
+    this->SwitchCollider(1);
+    this->mAttackCountTime = 0;
+    this->mAttackFlag = true;
 }
 
-bool Player::isAttacking() {
-    return this->attackFlag;
+void Player::Damage() {
+    this->mHP--;
 }
 
-vector<LinkedNode<Object*>**> checkHitObject(Player player, LinkedList<Object*>& objList) {
-    vector<LinkedNode<Object*>**> result;
-    Collider* playerCollider = player.getCurrentCollider();
+int Player::GetHP() {
+    return this->mHP;
+}
 
-    objList.for_each([&](LinkedNode<Object*>** node) {
-        Object* object = (*node)->m_value;
+int Player::GetCoin() {
+    return this->mCoin;
+}
 
-        if(object->compareTag("Player")) {
-            return;
-        }
+bool Player::IsAttacking() {
+    return this->mAttackFlag;
+}
 
-        if(playerCollider->checkHit(*object->getCurrentCollider(), player.getPosition(), object->getPosition())) {
-            result.push_back(node);
-        }
-    });
-
-    return result;
+void Player::HitObject(const Object* pObject, const HitBox* pHitbox) {
+    if(pObject->CompareTag("Enemy")) {
+        this->Damage();
+    } else if(pObject->CompareTag("Coin")) {
+        this->mCoin++;
+    }
 }

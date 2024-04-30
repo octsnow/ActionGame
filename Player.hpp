@@ -3,14 +3,22 @@
 
 class Player : public Object {
 public:
-    void init();
-    void update();
-    void attack();
+    virtual void Init(OctGame* pOctGame);
+    virtual void Update();
+    void Attack();
+    void Damage();
 
-    bool isAttacking();
+    int GetHP();
+    int GetCoin();
+
+    bool IsAttacking();
+
+    virtual void HitObject(const Object* pObject, const HitBox* pHitbox);
 private:
-    clock_t attackCountTime;
-    bool attackFlag;
+    clock_t mAttackCountTime;
+    bool mAttackFlag;
+    int mHP;
+    int mCoin;
 };
 
-vector<LinkedNode<Object*>**> checkHitObject(Player player, LinkedList<Object*>& objList);
+std::vector<LinkedNode<Object*>**> CheckHitObject(Player player, LinkedList<Object*>& objList);

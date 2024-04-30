@@ -4,7 +4,7 @@
 
 int main(int argc, char** argv) {
     Game game;
-    game.start(argc, argv);
+    game.Start(argc, argv);
 
     return 0;
 }

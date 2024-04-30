@@ -3,32 +3,34 @@
 
 using namespace std;
 
-bool pressedKeys[256];
-bool upKeys[256];
-bool downKeys[256];
+namespace {
+    bool pressedKeys[256];
+    bool upKeys[256];
+    bool downKeys[256];
+}
 
 namespace {
-    void key(unsigned char key, int x, int y) {
+    void Key(unsigned char key, int x, int y) {
         if(!pressedKeys[(int)key]) {
             downKeys[(int)key] = true;
         }
         pressedKeys[(int)key] = true;
     }
 
-    void keyUp(unsigned char key, int x, int y) {
+    void KeyUp(unsigned char key, int x, int y) {
         upKeys[(int)key] = true;
         pressedKeys[(int)key] = false;
     }
 
-    void resetKeys() {
+    void ResetKeys() {
         memset(upKeys, 0, sizeof(upKeys));
         memset(downKeys, 0, sizeof(downKeys));
     }
 }
 
-void OctGame::init(int* argc, char** argv, int width, int height) {
-    this->m_width = width;
-    this->m_height = height;
+void OctGame::Init(int* argc, char** argv, int width, int height) {
+    this->mWidth = width;
+    this->mHeight = height;
 
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(width, height);
@@ -36,8 +38,8 @@ void OctGame::init(int* argc, char** argv, int width, int height) {
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
     glutCreateWindow(argv[0]);
      
-    glutKeyboardFunc(key);
-    glutKeyboardUpFunc(keyUp);
+    glutKeyboardFunc(Key);
+    glutKeyboardUpFunc(KeyUp);
  
     BITMAPINFO bmi;
     ZeroMemory(&bmi, sizeof(bmi));
@@ -49,90 +51,90 @@ void OctGame::init(int* argc, char** argv, int width, int height) {
     bmi.bmiHeader.biCompression = BI_RGB;
 
     HDC tmpDC = GetDC(GetDesktopWindow());
-    this->m_hBitmap = CreateDIBSection(
-          tmpDC, &bmi, DIB_RGB_COLORS, (void**)&this->m_screen, 0, 0);
+    this->mHBitmap = CreateDIBSection(
+          tmpDC, &bmi, DIB_RGB_COLORS, (void**)&this->mScreen, 0, 0);
 
-    if(this->m_hBitmap == NULL) {
+    if(this->mHBitmap == NULL) {
         cout << "hBitmap is NULL" << endl;
         return;
     }
 
-    this->m_hDC = CreateCompatibleDC(tmpDC);
-    this->m_h01dHandle = SelectObject(this->m_hDC, this->m_hBitmap);
-    SetBkMode(this->m_hDC, TRANSPARENT);
+    this->mHDC = CreateCompatibleDC(tmpDC);
+    this->mH01dHandle = SelectObject(this->mHDC, this->mHBitmap);
+    SetBkMode(this->mHDC, TRANSPARENT);
 
     ReleaseDC(GetDesktopWindow(), tmpDC);
 
-    this->m_hFont = CreateFont(
+    this->mHFont = CreateFont(
         30, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
         SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS,
         CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
         VARIABLE_PITCH | FF_ROMAN, NULL
     );
-    SetTextColor(this->m_hDC, RGB(0xFF, 0xFF, 0xFF));
-    SelectObject(this->m_hDC, this->m_hFont);
+    SetTextColor(this->mHDC, RGB(0xFF, 0xFF, 0xFF));
+    SelectObject(this->mHDC, this->mHFont);
 }
 
-void OctGame::update() {
-    resetKeys();
+void OctGame::Update() {
+    ResetKeys();
 }
 
-void OctGame::displayFunc(void (*func)(void)) {
+void OctGame::DisplayFunc(void (*func)(void)) {
     glutDisplayFunc(func);
 }
 
-void OctGame::reshapeFunc(void (*func)(int, int)) {
+void OctGame::ReshapeFunc(void (*func)(int, int)) {
     glutReshapeFunc(func);
 }
 
-void OctGame::idleFunc(void (*func)(void)) {
+void OctGame::IdleFunc(void (*func)(void)) {
     glutIdleFunc(func);
 }
 
-void OctGame::destroy() {
-    SelectObject(this->m_hDC, GetStockObject(SYSTEM_FONT));
-    DeleteObject(this->m_hFont);
+void OctGame::Destroy() {
+    SelectObject(this->mHDC, GetStockObject(SYSTEM_FONT));
+    DeleteObject(this->mHFont);
 
-    SelectObject(this->m_hDC, this->m_h01dHandle);
-    DeleteDC(this->m_hDC);
-    DeleteObject(this->m_hBitmap);
+    SelectObject(this->mHDC, this->mH01dHandle);
+    DeleteDC(this->mHDC);
+    DeleteObject(this->mHBitmap);
 }
 
-int OctGame::loadImage(string filepath, bool isBmp) {
-    return this->m_imgManager.loadImage(filepath, isBmp);
+int OctGame::LoadImageFile(string filepath, bool isBmp) {
+    return this->mImgList.LoadImageFile(filepath, isBmp);
 }
 
-int OctGame::loadImage(string filepath, float sx, float sy, bool isBmp) {
-    return this->m_imgManager.loadImage(filepath, sx, sy, isBmp);
+int OctGame::LoadImageFile(string filepath, float sx, float sy, bool isBmp) {
+    return this->mImgList.LoadImageFile(filepath, sx, sy, isBmp);
 }
 
-int OctGame::loadRegionImage(string filepath, int width, int height, int n, bool isBmp) {
-    return this->m_imgManager.loadRegionImage(filepath, width, height, n, isBmp);
+int OctGame::LoadRegionImageFile(string filepath, int width, int height, int n, bool isBmp) {
+    return this->mImgList.LoadRegionImageFile(filepath, width, height, n, isBmp);
 }
 
-int OctGame::loadRegionImage(string filepath, float sx, float sy, int width, int height, int n, bool isBmp) {
-    return this->m_imgManager.loadRegionImage(filepath, sx, sy, width, height, n, isBmp);
+int OctGame::LoadRegionImageFile(string filepath, float sx, float sy, int width, int height, int n, bool isBmp) {
+    return this->mImgList.LoadRegionImageFile(filepath, sx, sy, width, height, n, isBmp);
 }
 
-void OctGame::drawBox(int x1, int y1, int x2, int y2, int color){
+void OctGame::DrawBox(int x1, int y1, int x2, int y2, int color){
     int minX = x1 < x2 ? x1 : x2;
-    int minY = this->m_height - (y1 > y2 ? y1 : y2) - 1;
+    int minY = this->mHeight - (y1 > y2 ? y1 : y2) - 1;
     int maxX = x1 > x2 ? x1 : x2;
-    int maxY = this->m_height - (y1 < y2 ? y1 : y2) - 1;
+    int maxY = this->mHeight - (y1 < y2 ? y1 : y2) - 1;
 
     for(int y = minY; y < maxY; y++){
         for(int x = minX; x < maxX; x++){
             for(int c = 0; c < 3; c++){
-                if(y < 0 || this->m_height <= y) continue;
-                if(x < 0 || this->m_width <= x) continue;
-                this->m_screen[(y * this->m_width + x) * 3 + c] = (char)((color >> ((2 - c) * 8)) & 0xFF);
+                if(y < 0 || this->mHeight <= y) continue;
+                if(x < 0 || this->mWidth <= x) continue;
+                this->mScreen[(y * this->mWidth + x) * 3 + c] = (char)((color >> ((2 - c) * 8)) & 0xFF);
             }
         }
     }
 }
 
-void OctGame::drawImage(int handle, int dx, int dy, bool transpose, bool isReverse){
-    cv::Mat* img = this->m_imgManager.getImage(handle);
+void OctGame::DrawImage(int handle, int dx, int dy, bool transpose, bool isReverse){
+    cv::Mat* img = this->mImgList.GetImage(handle);
     uchar* data = img->data;
 
     if(img == nullptr) {
@@ -146,8 +148,8 @@ void OctGame::drawImage(int handle, int dx, int dy, bool transpose, bool isRever
 
     if(imgC <= 3) transpose = false;
 
-    for(int y = 0; y < imgH && y + dy < this->m_height; y++){
-        for(int x = 0; x < imgW && x + dx < this->m_width; x++) {
+    for(int y = 0; y < imgH && y + dy < this->mHeight; y++){
+        for(int x = 0; x < imgW && x + dx < this->mWidth; x++) {
             if(x + dx < 0 || y + dy < 0) continue;
 
             int ix = x;
@@ -163,41 +165,41 @@ void OctGame::drawImage(int handle, int dx, int dy, bool transpose, bool isRever
             }
 
             for(int c = 0; c < 3; c++){
-                int dtIdx = ((this->m_height - (y + dy) - 1) * this->m_width + (x + dx)) * 3 + c;
+                int dtIdx = ((this->mHeight - (y + dy) - 1) * this->mWidth + (x + dx)) * 3 + c;
                 int scIdx = (iy * imgW + ix) * imgC + c;
-                this->m_screen[dtIdx] = this->m_screen[dtIdx] * (1 - tp) + img->data[scIdx] * tp;
+                this->mScreen[dtIdx] = this->mScreen[dtIdx] * (1 - tp) + img->data[scIdx] * tp;
             }
         }
     }
 }
 
-void OctGame::text(int x, int y, const char* format, ...) {
+void OctGame::Text(int x, int y, const char* format, ...) {
     char buf[256];
     va_list ap;
     va_start(ap, format);
     vsprintf_s(buf, 256, format, ap);
     va_end(ap);
 
-    TextOut(this->m_hDC, x, y, buf, lstrlen(buf));
+    TextOut(this->mHDC, x, y, buf, lstrlen(buf));
 }
 
-void OctGame::clearScreen(){
-    memset(this->m_screen, 0, this->m_height * this->m_width * 3);
+void OctGame::ClearScreen(){
+    memset(this->mScreen, 0, this->mHeight * this->mWidth * 3);
 }
 
-void OctGame::screenSwap() {
-    glDrawPixels(this->m_width, this->m_height, GL_RGB, GL_UNSIGNED_BYTE, this->m_screen );
+void OctGame::ScreenSwap() {
+    glDrawPixels(this->mWidth, this->mHeight, GL_RGB, GL_UNSIGNED_BYTE, this->mScreen );
     glutSwapBuffers();
 }
 
-bool OctGame::isPressed(char key) {
+bool OctGame::IsPressed(char key) {
     return pressedKeys[(int)key];
 }
 
-bool OctGame::isUp(char key) {
+bool OctGame::IsUp(char key) {
     return upKeys[(int)key];
 }
 
-bool OctGame::isDown(char key) {
+bool OctGame::IsDown(char key) {
     return downKeys[(int)key];
 }

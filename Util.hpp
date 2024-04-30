@@ -1,8 +1,11 @@
 #pragma once
 #include <vector>
+#include <iostream>
 
 class Vector2d {
 public:
+    Vector2d() : x(0), y(0) {}
+    Vector2d(double x, double y): x(x), y(y) {}
     double x, y;
 };
 
@@ -10,64 +13,93 @@ template<typename T>
 class LinkedNode {
 public:
     LinkedNode(T v) {
-        this->m_value = v;
-        this->m_next = nullptr;
+        this->mValue = v;
+        this->mNext = nullptr;
+        this->mPrev = nullptr;
     }
 
-    T* getValue() {
-        return this->m_value;
+    T* GetValue() {
+        return &this->mValue;
     }
 
-    T m_value;
-    LinkedNode<T>* m_next;
+    T mValue;
+    LinkedNode<T>* mPrev;
+    LinkedNode<T>* mNext;
 };
 
 template<typename T>
 class LinkedList {
 public:
     LinkedList() {
-        this->m_head = nullptr;
+        this->mHead = nullptr;
+        this->mTail = nullptr;
     }
 
     ~LinkedList() {
-        LinkedNode<T>* node = this->m_head;
+        LinkedNode<T>* node = this->mHead;
         while(node != nullptr) {
-            LinkedNode<T>* nextNode = node->m_next;
+            LinkedNode<T>* nextNode = node->mNext;
             delete node;
             node = nextNode;
         }
     }
 
-    void append(T v) {
+    void Append(T v) {
         LinkedNode<T>* newNode = new LinkedNode<T>(v);
         
-        if(this->m_head != nullptr) {
-            newNode->m_next = this->m_head;
+        if(this->mHead == nullptr) {
+            this->mHead = newNode;
+            this->mTail = newNode;
+        } else {
+            newNode->mPrev = this->mTail;
+            this->mTail->mNext = newNode;
+            this->mTail = newNode;
         }
-        this->m_head = newNode;
     }
     
-    void remove(LinkedNode<T>** node) {
+    void Remove(LinkedNode<T>* node) {
         if(node == nullptr) return;
-        if(*node == nullptr) return;
+        if(node == this->mHead) {
+            this->mHead = node->mNext;
+            std::cout << "head null" << std::endl;
+        }
+        if(node == this->mTail) {
+            this->mTail = this->mTail->mPrev;
+            std::cout << "tail null" << std::endl;
+        }
+        if(node->mPrev != nullptr) {
+            node->mPrev->mNext = node->mNext;
+            std::cout << "prev not null" << std::endl;
+        }
+        if(node->mNext != nullptr) {
+            node->mNext->mPrev = node->mPrev;
+            std::cout << "next not null" << std::endl;
+        }
 
-        LinkedNode<T>* rmNode = *node;
+        std::cout << "delete node" << std::endl;
+        delete node;
+        std::cout << "deleted node" << std::endl;
+    }
 
-        *node = (*node)->m_next;
+    LinkedNode<T>* GetHead() {
+        return this->mHead;
+    }
 
-        delete rmNode;
+    LinkedNode<T>* GetTail() {
+        return this->mTail;
     }
 
     template<typename Func>
     void for_each(Func func) {
-        LinkedNode<T>** node = &this->m_head;
+        LinkedNode<T>* node = this->mHead;
 
-        while(*node != nullptr) {
+        while(node != nullptr) {
             func(node);
-            node = &(*node)->m_next;
+            node = node->mNext;
         }
     }
 
 private:
-    LinkedNode<T>* m_head;
+    LinkedNode<T>* mHead;
+    LinkedNode<T>* mTail;
 };

@@ -1,67 +1,84 @@
 #include "Enemy.hpp"
+#include "Item.hpp"
 #include <iostream>
 
 #define MAX_SPEED_Y 50
 #define X_SPEED 1
 
-void Enemy::init() {
-    this->setTag("Enemy");
-    this->turnRight();
-    this->m_maxHP = 100;
-    this->m_HP = this->m_maxHP;
+void Enemy::Init(OctGame* pOctGame) {
+    Collider collider;
+    this->SetImageHandle(0, {
+        pOctGame->LoadImageFile("images/slime.bmp", true)});
+    this->SetSize(50, 50);
+    this->SetPosition(30, 0);
+
+    collider.AddHitBox(1, 0, 50, 50, true, false);
+    this->AppendCollider(collider);
+
+    this->SetTag("Enemy");
+    this->TurnRight();
+    this->mMaxHP = 100;
+    this->mHP = this->mMaxHP;
 }
 
-void Enemy::update() {
-    if(this->isWall()) {
-        this->turnOther();
+void Enemy::Update() {
+    if(this->IsWall()) {
+        this->TurnOther();
+        this->Damage();
     }
 
-    if(this->isGround()) {
-        if(this->m_isLeft) {
-            this->setVector(-1, 0);
+    if(this->IsGround()) {
+        if(this->mIsLeft) {
+            this->SetVector(-1, 0);
         } else {
-            this->setVector(1, 0);
+            this->SetVector(1, 0);
         }
     }
 
-    this->addVector(0, this->m_gravity);
+    this->AddVector(0, this->mGravity);
 
-    if(this->m_vector.y > MAX_SPEED_Y) {
-        this->m_vector.y = MAX_SPEED_Y;
+    if(this->mVector.y > MAX_SPEED_Y) {
+        this->mVector.y = MAX_SPEED_Y;
     }
 }
 
-void Enemy::draw(OctGame* game, Vector2d cameraPos) {
-    Object::draw(game, cameraPos);
-    int hpWidth = this->m_width * ((float)this->m_HP / this->m_maxHP);
+void Enemy::Draw(OctGame* game, Vector2d cameraPos) {
+    Object::Draw(game, cameraPos);
+    int hpWidth = this->mWidth * ((float)this->mHP / this->mMaxHP);
 
-    game->drawBox(
-            this->m_position.x - cameraPos.x,
-            this->m_position.y - 20,
-            this->m_position.x + hpWidth - cameraPos.x,
-            this->m_position.y - 10,
+    game->DrawBox(
+            this->mPosition.x - cameraPos.x,
+            this->mPosition.y - 20,
+            this->mPosition.x + hpWidth - cameraPos.x,
+            this->mPosition.y - 10,
             0x00FF00
     );
 
-    game->drawBox(
-            this->m_position.x - cameraPos.x + hpWidth,
-            this->m_position.y - 20,
-            this->m_position.x + this->m_width - cameraPos.x,
-            this->m_position.y - 10,
+    game->DrawBox(
+            this->mPosition.x - cameraPos.x + hpWidth,
+            this->mPosition.y - 20,
+            this->mPosition.x + this->mWidth - cameraPos.x,
+            this->mPosition.y - 10,
             0xFF0000
     );
 }
 
-void Enemy::damage() {
-    this->m_HP--;
+void Enemy::Damage() {
+    this->mHP-=10;
 
-    if(this->m_HP <= 0) {
-        this->appendMessage(OBJMSG_DESTROY);
+    if(this->mHP <= 0) {
+        this->PushMessage(OBJECTMESSAGE_DESTROY);
+        /*
+        Hat* hat = new Hat();
+        hat->SetPosition(this->GetPosition().x, this->GetPosition().y);
+        hat->SetGravity(this->mGravity);
+        this->PushObject(hat);
+        */
     }
 }
 
-void Enemy::onCollision(Object obj, HitBox hb) {
-    if(obj.compareTag("Player") && hb.isAttack) {
-        this->damage();
+void Enemy::HitObject(const Object* obj, const HitBox* hb) {
+    if(obj->CompareTag("Player") && hb->isAttack) {
+        this->Damage();
     }
 }

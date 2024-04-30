@@ -4,22 +4,24 @@
 
 class HitBox {
 public:
+    HitBox(double x, double y, int width, int height, bool isPhysics, bool isAttack);
     HitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack);
-    bool isHitBox(HitBox target, Vector2d pos, Vector2d targetPos);
+    bool IsHitBox(const HitBox target, const Vector2d pos, const Vector2d targetPos) const;
 
     Vector2d pos;
     int width;
     int height;
-    const bool isPhysics;
-    const bool isAttack;
+    bool isPhysics;
+    bool isAttack;
 };
 
 class Collider {
 public:
-    void addHitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack);
-    std::vector<HitBox> getHitBoxes();
-    bool checkHit(Collider target, Vector2d pos, Vector2d targetPos);
+    void AddHitBox(double x, double y, int width, int height, bool isPhysics, bool isAttack);
+    void AddHitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack);
+    std::vector<HitBox> GetHitBoxes() const;
+    bool CheckHit(const Collider target, const Vector2d pos, const Vector2d targetPos) const;
 
 private:
-    std::vector<HitBox> m_collisionAreas;
+    std::vector<HitBox> mHitBoxes;
 };

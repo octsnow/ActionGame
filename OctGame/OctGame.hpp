@@ -2,39 +2,39 @@
 #include <GL/freeglut.h>
 #include <iostream>
 #include <string>
-#include "ImageManager.hpp"
+#include "ImageList.hpp"
 
 class OctGame {
 public:
-    void init(int* argc, char** argv, int width, int height);
-    void destroy();
+    void Init(int* argc, char** argv, int width, int height);
+    void Destroy();
 
-    void update();
+    void Update();
 
-    void displayFunc(void (*func)(void));
-    void reshapeFunc(void (*func)(int, int));
-    void idleFunc(void (*func)(void));
+    void DisplayFunc(void (*func)(void));
+    void ReshapeFunc(void (*func)(int, int));
+    void IdleFunc(void (*func)(void));
 
-    int loadImage(std::string filepath, bool isBmp=false);
-    int loadImage(std::string filepath, float sx, float sy, bool isBmp=false);
-    int loadRegionImage(std::string filepath, int width, int height, int n, bool isBmp=false);
-    int loadRegionImage(std::string filepath, float sx, float sy, int width, int height, int n, bool isBmp=false);
-    void drawBox(int x1, int y1, int x2, int y2, int color);
-    void drawImage(int handle, int dX, int dY, bool transpose=false, bool isReverse=false);
-    void text(int x, int y, const char* format, ...);
-    void clearScreen();
-    void screenSwap();
+    int LoadImageFile(std::string filepath, bool isBmp=false);
+    int LoadImageFile(std::string filepath, float sx, float sy, bool isBmp=false);
+    int LoadRegionImageFile(std::string filepath, int width, int height, int n, bool isBmp=false);
+    int LoadRegionImageFile(std::string filepath, float sx, float sy, int width, int height, int n, bool isBmp=false);
+    void DrawBox(int x1, int y1, int x2, int y2, int color);
+    void DrawImage(int handle, int dX, int dY, bool transpose=false, bool isReverse=false);
+    void Text(int x, int y, const char* format, ...);
+    void ClearScreen();
+    void ScreenSwap();
 
-    bool isPressed(char key);
-    bool isUp(char key);
-    bool isDown(char key);
+    bool IsPressed(char key);
+    bool IsUp(char key);
+    bool IsDown(char key);
 private:
-    uint8_t* m_screen;
-    int m_width;
-    int m_height;
-    HDC m_hDC;
-    HFONT m_hFont;
-    HBITMAP m_hBitmap;
-    HGDIOBJ m_h01dHandle;
-    ImageManager m_imgManager;
+    uint8_t* mScreen;
+    int mWidth;
+    int mHeight;
+    HDC mHDC;
+    HFONT mHFont;
+    HBITMAP mHBitmap;
+    HGDIOBJ mH01dHandle;
+    ImageList mImgList;
 };

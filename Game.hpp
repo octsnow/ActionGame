@@ -19,7 +19,7 @@ typedef struct {
 
 class Game {
 public:
-    void start(int argc, char** argv);
-    void init(int argc, char** argv);
-    void term();
+    void Start(int argc, char** argv);
+    void Init(int argc, char** argv);
+    void Term();
 };

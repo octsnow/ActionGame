@@ -1,7 +1,16 @@
 #include "Collider.hpp"
+#include <iostream>
 
 using namespace std;
 
+HitBox::HitBox(double x, double y, int width, int height, bool isPhysics, bool isAttack)
+    : pos(Vector2d(0, 0))
+    , width(width)
+    , height(height)
+    , isPhysics(isPhysics)
+    , isAttack(isAttack) {
+    }
+    
 HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack)
     : pos(pos)
     , width(width)
@@ -10,30 +19,7 @@ HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttac
     , isAttack(isAttack) {
 }
 
-void Collider::addHitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack) {
-    HitBox hb(pos, width, height, isPhysics, isAttack);
-    this->m_collisionAreas.push_back(hb);
-}
-
-vector<HitBox> Collider::getHitBoxes() {
-    return this->m_collisionAreas;
-}
-
-bool Collider::checkHit(Collider target, Vector2d pos, Vector2d targetPos)  {
-    vector<HitBox> targetHitBoxs = target.getHitBoxes();
-
-    for(HitBox r : this->m_collisionAreas) {
-        for(HitBox tr : targetHitBoxs) {
-            if(r.isHitBox(tr, pos, targetPos)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-bool HitBox::isHitBox(HitBox target, Vector2d pos, Vector2d targetPos){
+bool HitBox::IsHitBox(const HitBox target, const Vector2d pos, const Vector2d targetPos) const {
     int lx, ly, lw, lh, hx, hy;
     Vector2d worldPos, worldTargetPos;
 
@@ -63,4 +49,32 @@ bool HitBox::isHitBox(HitBox target, Vector2d pos, Vector2d targetPos){
     }
 
     return ( lx <= hx && hx < lx + lw ) && ( ly <= hy && hy < ly + lh );
+}
+
+void Collider::AddHitBox(double x, double y, int width, int height, bool isPhysics, bool isAttack) {
+    HitBox hitbox(x, y, width, height, isPhysics, isAttack);
+    this->mHitBoxes.push_back(hitbox);
+}
+
+void Collider::AddHitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack) {
+    HitBox hitbox(pos, width, height, isPhysics, isAttack);
+    this->mHitBoxes.push_back(hitbox);
+}
+
+vector<HitBox> Collider::GetHitBoxes() const {
+    return this->mHitBoxes;
+}
+
+bool Collider::CheckHit(const Collider target, const Vector2d pos, const Vector2d targetPos) const {
+    vector<HitBox> targetHitBoxs = target.GetHitBoxes();
+
+    for(HitBox r : this->mHitBoxes) {
+        for(HitBox tergetHitBox : targetHitBoxs) {
+            if(r.IsHitBox(tergetHitBox, pos, targetPos)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
