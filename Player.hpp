@@ -8,8 +8,8 @@ struct Gears {
 
 class Player : public Object {
 public:
-    virtual void Init(OctGame* pOctGame);
-    virtual void Update();
+    virtual void Init(OctGame* pOctGame) override;
+    virtual void Update(OctGame* pOctGame) override;
     void Attack();
     void Damage();
     void Left();
@@ -21,7 +21,7 @@ public:
 
     bool IsAttacking();
 
-    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox);
+    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox) override;
 private:
     clock_t mAttackCountTime;
     bool mAttackFlag;

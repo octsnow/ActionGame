@@ -46,18 +46,15 @@ public:
     int GetWidth() const;
     int GetHeight() const;
 
-//    void AppendCollider(Collider c);
     void SetCollider(Collider c);
     void SetColliderSet(std::vector<uint32_t> indices);
     void SwitchCollider(int i);
-//    bool HasColliders();
-//    Collider GetCurrentCollider();
-//    Collider GetCollider(int i);
     Collider GetCollider();
-//    int GetNumColliders() const;
 
     void SetPosition(double x, double y);
+    void SetOffsetPosition(double x, double y);
     Vector2d GetPosition() const;
+    Vector2d GetOffsetPosition() const;
     void Translate(double x, double y);
 
     void SetVector(double x, double y);
@@ -92,7 +89,7 @@ public:
     Object* PopObject();
 
     virtual void Init(OctGame* pOctGame) {};
-    virtual void Update() {};
+    virtual void Update(OctGame* pOctGame) {};
     virtual void Draw(OctGame* pOctGame, Vector2d cameraPos);
 
     // event call backs
@@ -116,6 +113,7 @@ protected:
     int mWidth;
     int mHeight;
     Vector2d mPosition;
+    Vector2d mOffsetPosition;
     Vector2d mVector;
     bool mIsLeft;
 

@@ -9,7 +9,7 @@ enum HAT {
 class Item : public Object {
 public:
     Item();
-    virtual void Update();
+    virtual void Update(OctGame* pOctGame) override;
 
     bool CanPicup();
 private:
@@ -18,14 +18,13 @@ private:
 
 class Coin : public Object {
 public:
-    virtual void Init(OctGame* pOctGame);
-    virtual void Update();
-
-    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox);
+    virtual void Init(OctGame* pOctGame) override;
+    virtual void Update(OctGame* pOctGame) override;
+    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox) override;
 };
 
 class Hat : public Item {
 public:
-    virtual void Init(OctGame* pOctGame);
-    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox);
+    virtual void Init(OctGame* pOctGame) override;
+    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox) override;
 };

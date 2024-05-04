@@ -7,7 +7,7 @@ class Object;
 class Enemy : public Object {
 public:
     virtual void Init(OctGame* pOctGame) override;
-    virtual void Update() override;
+    virtual void Update(OctGame* pOctGame) override;
     virtual void Draw(OctGame* game, Vector2d cameraPos) override;
     void Damage();
 

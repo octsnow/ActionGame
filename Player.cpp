@@ -40,8 +40,36 @@ void Player::Init(OctGame* pOctGame) {
     this->mGears.Hat = HAT::HAT_NONE;
 }
 
-void Player::Update() {
-    this->AddVector(0, this->mGravity);
+void Player::Update(OctGame* pOctGame) {
+    bool isMoved = false;
+    if(pOctGame->IsPressed('a') && !this->IsAttacking()) {
+        this->Left();
+        isMoved = true;
+    }
+    if(pOctGame->IsPressed('d') && !this->IsAttacking()) {
+        this->Right();
+        isMoved = true;
+    }
+    if(pOctGame->IsPressed(' ')) {
+        this->Jump();
+    }
+
+    if(pOctGame->IsDown('j')) {
+        this->Attack();
+    }
+    Vector2d vec = this->GetVector();
+    if(!isMoved) {
+        if(!this->IsAttacking()) {
+            this->SetAnimationNum(0);
+        }
+        if(vec.x > 0) {
+            this->AddVector(-1, 0);
+        } else if(vec.x < 0) {
+            this->AddVector(1, 0);
+        }
+    }
+
+//    this->AddVector(0, this->mGravity);
 
     double vy = this->mVector.y;
     if(vy > MAX_SPEED_Y) {

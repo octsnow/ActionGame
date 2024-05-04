@@ -25,7 +25,7 @@ void Enemy::Init(OctGame* pOctGame) {
     this->mHP = this->mMaxHP;
 }
 
-void Enemy::Update() {
+void Enemy::Update(OctGame* pOctGame) {
     if(this->IsWall()) {
         this->TurnOther();
     }

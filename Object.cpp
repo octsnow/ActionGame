@@ -244,12 +244,21 @@ void Object::SetPosition(double x, double y) {
     }
 }
 
+void Object::SetOffsetPosition(double x, double y) {
+    this->mOffsetPosition.x = x;
+    this->mOffsetPosition.y = y;
+}
+
 void Object::Translate(double x, double y) {
     this->SetPosition(this->mPosition.x + x, this->mPosition.y + y);
 }
 
 Vector2d Object::GetPosition() const {
     return this->mPosition;
+}
+
+Vector2d Object::GetOffsetPosition() const {
+    return this->mOffsetPosition;
 }
 
 void Object::SetVector(double x, double y) {
@@ -358,8 +367,8 @@ Object* Object::PopObject() {
 void Object::Draw(OctGame* pOctGame, Vector2d cameraPos) {
     pOctGame->DrawImage(
         this->GetImageHandle(),
-        this->mPosition.x - cameraPos.x,
-        this->mPosition.y - cameraPos.y,
+        this->mPosition.x + this->mOffsetPosition.x - cameraPos.x,
+        this->mPosition.y + this->mOffsetPosition.y - cameraPos.y,
         true, this->mIsLeft);
 
     for(HitBox hitBox : this->GetCollider().GetHitBoxes()) {
@@ -386,6 +395,8 @@ void Object::InitParams() {
     this->mHeight = 0;
     this->mPosition.x = 0;
     this->mPosition.y = 0;
+    this->mOffsetPosition.x = 0;
+    this->mOffsetPosition.y = 0;
     this->mVector.x = 0;
     this->mVector.y = 0;
     this->mIsLeft = false;
@@ -415,7 +426,7 @@ void ObjectList::Update(OctGame* pOctGame, Vector2d cameraPos) {
         Object* pObject = node->GetValue()->pObject;
         pObject->UpdatePosition();
         pObject->Draw(pOctGame, cameraPos);
-        pObject->Update();
+        pObject->Update(pOctGame);
     });
     this->mObjectList.for_each([&](LinkedNode<ObjectListData>* node) {
         Object* pObject = node->GetValue()->pObject;
