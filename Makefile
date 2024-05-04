@@ -5,3 +5,6 @@ all: main
 
 main:
 	cl /EHsc $(SRC_FILES) $(GAMESRC_FILES) /Fe:main
+
+clean:
+	rm *.obj *.exe
