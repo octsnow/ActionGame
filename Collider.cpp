@@ -1,14 +1,16 @@
 #include "Collider.hpp"
 #include <iostream>
+#include <cassert>
 
 using namespace std;
 
 HitBox::HitBox(double x, double y, int width, int height, bool isPhysics, bool isAttack)
-    : pos(Vector2d(0, 0))
+    : pos(Vector2d(x, y))
     , width(width)
     , height(height)
     , isPhysics(isPhysics)
     , isAttack(isAttack) {
+        this->isActive = false;
     }
     
 HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack)
@@ -17,6 +19,7 @@ HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttac
     , height(height)
     , isPhysics(isPhysics)
     , isAttack(isAttack) {
+        this->isActive = false;
 }
 
 bool HitBox::IsHitBox(const HitBox target, const Vector2d pos, const Vector2d targetPos) const {
@@ -77,4 +80,14 @@ bool Collider::CheckHit(const Collider target, const Vector2d pos, const Vector2
     }
 
     return false;
+}
+
+void Collider::ActiveHitBox(int i) {
+    assert(this->mHitBoxes.size() > i);
+    this->mHitBoxes[i].isActive = true;
+}
+
+void Collider::DeactiveHitBox(int i) {
+    assert(this->mHitBoxes.size() > i);
+    this->mHitBoxes[i].isActive = false;
 }

@@ -7,9 +7,7 @@ namespace {
     bool pressedKeys[256];
     bool upKeys[256];
     bool downKeys[256];
-}
 
-namespace {
     void Key(unsigned char key, int x, int y) {
         if(!pressedKeys[(int)key]) {
             downKeys[(int)key] = true;
@@ -25,6 +23,12 @@ namespace {
     void ResetKeys() {
         memset(upKeys, 0, sizeof(upKeys));
         memset(downKeys, 0, sizeof(downKeys));
+    }
+
+    int Clamp(int n, int min, int max) {
+        if(n < min) return min;
+        if(n > max) return max;
+        return n;
     }
 }
 
@@ -116,18 +120,39 @@ int OctGame::LoadRegionImageFile(string filepath, float sx, float sy, int width,
     return this->mImgList.LoadRegionImageFile(filepath, sx, sy, width, height, n, isBmp);
 }
 
-void OctGame::DrawBox(int x1, int y1, int x2, int y2, int color){
+void OctGame::DrawBox(int x1, int y1, int x2, int y2, int color, bool fillFlag) {
     int minX = x1 < x2 ? x1 : x2;
     int minY = this->mHeight - (y1 > y2 ? y1 : y2) - 1;
     int maxX = x1 > x2 ? x1 : x2;
     int maxY = this->mHeight - (y1 < y2 ? y1 : y2) - 1;
 
-    for(int y = minY; y < maxY; y++){
-        for(int x = minX; x < maxX; x++){
-            for(int c = 0; c < 3; c++){
-                if(y < 0 || this->mHeight <= y) continue;
-                if(x < 0 || this->mWidth <= x) continue;
-                this->mScreen[(y * this->mWidth + x) * 3 + c] = (char)((color >> ((2 - c) * 8)) & 0xFF);
+    minX = Clamp(minX, 0, this->mWidth);
+    maxX = Clamp(maxX, 0, this->mWidth);
+    minY = Clamp(minY, 0, this->mHeight);
+    maxY = Clamp(maxY, 0, this->mHeight);
+    if(fillFlag) {
+        for(int y = minY; y < maxY; y++) {
+            for(int x = minX; x < maxX; x++) {
+                for(int c = 0; c < 3; c++) {
+                    char byte = (char)((color >> ((2 - c) * 8)) & 0xFF);
+                    this->mScreen[(y * this->mWidth + x) * 3 + c] = byte;
+                }
+            }
+        }
+    } else {
+        for(int x = minX; x < maxX; x++) {
+            for(int c = 0; c < 3; c++) {
+                char byte = (char)((color >> ((2 - c) * 8)) & 0xFF);
+                this->mScreen[(minY * this->mWidth + x) * 3 + c] = byte;
+                this->mScreen[((maxY - 1) * this->mWidth + x) * 3 + c] = byte;
+            }
+        }
+
+        for(int y = minY + 1; y < maxY - 1; y++) {
+            for(int c = 0; c < 3; c++) {
+                char byte = (char)((color >> ((2 - c) * 8)) & 0xFF);
+                this->mScreen[(y * this->mWidth + minX) * 3 + c] = byte;
+                this->mScreen[(y * this->mWidth + (maxX - 1)) * 3 + c] = byte;
             }
         }
     }

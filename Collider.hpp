@@ -13,6 +13,7 @@ public:
     int height;
     bool isPhysics;
     bool isAttack;
+    bool isActive;
 };
 
 class Collider {
@@ -21,6 +22,8 @@ public:
     void AddHitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack);
     std::vector<HitBox> GetHitBoxes() const;
     bool CheckHit(const Collider target, const Vector2d pos, const Vector2d targetPos) const;
+    void ActiveHitBox(int i);
+    void DeactiveHitBox(int i);
 
 private:
     std::vector<HitBox> mHitBoxes;

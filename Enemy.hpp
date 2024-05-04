@@ -11,7 +11,7 @@ public:
     virtual void Draw(OctGame* game, Vector2d cameraPos) override;
     void Damage();
 
-    virtual void HitObject(const Object* obj, const HitBox* hb) override;
+    virtual void EnterObject(const Object* obj, const HitBox* hb) override;
 
 private:
     int mHP;

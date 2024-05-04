@@ -2,18 +2,22 @@
 
 #include <string>
 #include <queue>
+#include <stack>
 #include <vector>
 #include <tuple>
 
 #include "OctGame/OctGame.hpp"
 #include "Collider.hpp"
 
+typedef uint32_t HitBoxHandle;
+
 class Object;
 class ObjectList;
 class LQTData;
 class LinearQuaternaryTree;
+class HandlePool;
 
-struct ObjectListData{
+struct ObjectListData {
     Object* pObject;
     std::vector<LinkedNode<LQTData>*> lqtNodes;
 };
@@ -22,8 +26,8 @@ typedef LinkedList<LQTData> LQTNode;
 typedef LinkedNode<LQTData> LQTNodeNode;
 
 enum ObjectMessage {
-    OBJECTMESSAGE_DESTROY,
-    OBJECTMESSAGE_NONE
+    OBJMSG_DESTROY,
+    OBJMSG_NONE
 };
 
 class Object {
@@ -42,11 +46,15 @@ public:
     int GetWidth() const;
     int GetHeight() const;
 
-    void AppendCollider(Collider c);
+//    void AppendCollider(Collider c);
+    void SetCollider(Collider c);
+    void SetColliderSet(std::vector<uint32_t> indices);
     void SwitchCollider(int i);
-    Collider* GetCurrentCollider();
-    Collider* GetCollider(int i);
-    int GetNumColliders() const;
+//    bool HasColliders();
+//    Collider GetCurrentCollider();
+//    Collider GetCollider(int i);
+    Collider GetCollider();
+//    int GetNumColliders() const;
 
     void SetPosition(double x, double y);
     Vector2d GetPosition() const;
@@ -70,6 +78,7 @@ public:
     bool IsMoved();
 
     void SetGravity(double gravity);
+    void AddGravity();
 
     void SetTag(std::string tag);
     bool CompareTag(std::string tag) const;
@@ -84,10 +93,11 @@ public:
 
     virtual void Init(OctGame* pOctGame) {};
     virtual void Update() {};
-    virtual void Draw(OctGame* game, Vector2d cameraPos);
+    virtual void Draw(OctGame* pOctGame, Vector2d cameraPos);
 
     // event call backs
-    virtual void HitObject(const Object* object, const HitBox* hitbox) {};
+    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox) {};
+    virtual void StayObject(const Object* pObject, const HitBox* pHitbox) {};
 
 protected:
     // Methods
@@ -113,7 +123,9 @@ protected:
     bool mIsGround;
     bool mIsWall;
 
-    std::vector<Collider> mColliders;
+    Collider mCollider;
+    std::vector<std::vector<uint32_t>> mColliderIndices;
+//    std::vector<Collider> mColliders;
     int mColliderIndex;
     std::string mTag;
     std::queue<ObjectMessage> mMsgQue;
@@ -122,13 +134,27 @@ protected:
     bool mIsMoved;
 };
 
+class HandlePool {
+public:
+    HandlePool();
+    HitBoxHandle GetHandle();
+    void FreeHandle(HitBoxHandle handle);
+
+private:
+    std::stack<HitBoxHandle> mPool;
+    HitBoxHandle mMax;
+};
+
 class LQTData{
 public:
-    LQTData() : hitbox(HitBox(0, 0, 0, 0, false, false)), pObject(nullptr), pList(nullptr) {}
-    LQTData(HitBox hitbox, Object* pObject, LQTNode* pList) : hitbox(hitbox), pObject(pObject), pList(pList) {}
-    HitBox hitbox;
+    LQTData();
+    LQTData(uint32_t hitboxIndex, Object* pObject, uint32_t handle, LQTNode* pList);
+    uint32_t hitboxIndex;
     Object* pObject;
+    uint32_t handle;
     LQTNode* pList;
+    std::vector<HitBoxHandle> lastHitBoxes;
+    std::vector<HitBoxHandle> newHitBoxes;
 };
 
 class LinearQuaternaryTree {
@@ -136,10 +162,15 @@ public:
     LinearQuaternaryTree(int depth, unsigned int rootWidth, unsigned int rootHeight);
     ~LinearQuaternaryTree();
     std::vector<LQTNodeNode*> Append(Object* object);
+    LQTNodeNode* AppendHitBox(Object* pObject, uint32_t hitboxIndex);
+    LQTNodeNode* AppendHitBox(Object* pObject, uint32_t hitboxIndex, HitBoxHandle handle);
+    LQTNodeNode* Reregist(LQTNodeNode* node);
+    void Remove(LQTNodeNode* node);
     void checkHit() const;
 
 private:
     LQTNode* mTree;
+    HandlePool mHandlePool;
     int mDepth;
     unsigned int mRootWidth;
     unsigned int mRootHeight;
@@ -148,7 +179,7 @@ private:
 class ObjectList {
 public:
     ObjectList(unsigned int worldWidth, unsigned int worldHeight);
-    void AppendObject(Object* object);
+    void AppendObject(Object* pObject);
     void CheckHitObjects() const;
     void Update(OctGame* pOctGame, Vector2d);
     template <typename Func> void for_each(Func func) {

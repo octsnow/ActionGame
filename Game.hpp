@@ -6,6 +6,7 @@
 #include "Enemy.hpp"
 #include "Stage.hpp"
 #include "Character.hpp"
+#include "UI.hpp"
 
 enum class Tag {
     Player = 1,

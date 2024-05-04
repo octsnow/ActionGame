@@ -1,7 +1,9 @@
 #include "Player.hpp"
 #include <stdio.h>
 
+#define MAX_SPEED_X 5
 #define MAX_SPEED_Y 50
+#define JUNP_SPEED 20
 
 using namespace std;
 
@@ -24,16 +26,18 @@ void Player::Init(OctGame* pOctGame) {
         pOctGame->LoadImageFile("images/player_punch0.bmp", true),
         pOctGame->LoadImageFile("images/player_punch1.bmp", true)});
 
-    collider.AddHitBox(10, 0, 50, 100, true, false);
-    attackCollider.AddHitBox(10, 0, 50, 100, true, false);
-    attackCollider.AddHitBox(60, 0, 20, 100, false, true);
-    this->AppendCollider(collider);
-    this->AppendCollider(attackCollider);
+    attackCollider.AddHitBox(20, 0, 60, 100, true, false);
+    attackCollider.AddHitBox(60, 0, 40, 100, false, true);
+    this->SetCollider(attackCollider);
+    this->SetColliderSet({0});
+    this->SetColliderSet({0, 1});
+    this->SwitchCollider(0);
 
-    this->SetSize(70, 100);
+    this->SetSize(100, 100);
     this->SetTag("Player");
     this->mHP = 100;
     this->mCoin = 0;
+    this->mGears.Hat = HAT::HAT_NONE;
 }
 
 void Player::Update() {
@@ -61,10 +65,37 @@ void Player::Attack() {
     this->SwitchCollider(1);
     this->mAttackCountTime = 0;
     this->mAttackFlag = true;
+    this->SetAnimationNum(2);
 }
 
 void Player::Damage() {
     this->mHP--;
+}
+
+void Player::Left() {
+    this->AddVector(-1, 0);
+    this->TurnLeft();
+    if(this->GetVector().x < -MAX_SPEED_X) {
+        this->SetVector(-MAX_SPEED_X, this->GetVector().y);
+    }
+    this->SetAnimationNum(1);
+}
+
+void Player::Right() {
+    this->AddVector(1, 0);
+    this->TurnRight();
+    if(this->GetVector().x > MAX_SPEED_X) {
+        this->SetVector(MAX_SPEED_X, this->GetVector().y);
+    }
+    this->SetAnimationNum(1);
+}
+
+void Player::Jump() {
+    if(!this->IsGround()) {
+        return;
+    }
+
+    this->SetVector(this->GetVector().x, -JUNP_SPEED * (this->mGears.Hat == HAT::HAT_SLIMEHAT ? 1.5 : 1));
 }
 
 int Player::GetHP() {
@@ -79,10 +110,12 @@ bool Player::IsAttacking() {
     return this->mAttackFlag;
 }
 
-void Player::HitObject(const Object* pObject, const HitBox* pHitbox) {
+void Player::EnterObject(const Object* pObject, const HitBox* pHitbox) {
     if(pObject->CompareTag("Enemy")) {
         this->Damage();
     } else if(pObject->CompareTag("Coin")) {
         this->mCoin++;
+    } else if(pObject->CompareTag("SlimeHat")) {
+        this->mGears.Hat = HAT::HAT_SLIMEHAT;
     }
 }

@@ -1,5 +1,4 @@
 #include "Game.hpp"
-#include "OctGame/OctGame.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -12,8 +11,6 @@
 #define STAGE_H 12
 #define STAGE_W 20
 #define BLOCK_SIZE 50
-#define MAX_SPEED_X 5
-#define JUNP_SPEED 20
 #define GRAVITY 1
 #define FPS 1
 #define OBJECT_COIN 0
@@ -25,9 +22,6 @@ namespace {
     struct {
         int countTime = 0;
     } gSysInf;
-    struct {
-        KeyState key = {false, false};
-    } gGameInfo;
 
     const int gStageData[] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -41,51 +35,54 @@ namespace {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     };
 
     OctGame gOctGame;
     Stage gStage;
     ObjectList gObjectList(STAGE_W * BLOCK_SIZE, STAGE_H * BLOCK_SIZE);
     Player* gPPlayer;
+    UI gUi;
 
     void Update() {
-        int playerAnimNum = 0;
         Vector2d pPos, pVec;
+        bool isMoved = false;
         
         // move when a or d is pressed
-        if(gOctGame.IsPressed('a')) {
-            gPPlayer->AddVector(-1, 0);
-            gPPlayer->TurnLeft();
-            if(gPPlayer->GetVector().x < -MAX_SPEED_X) {
-                gPPlayer->SetVector(-MAX_SPEED_X, gPPlayer->GetVector().y);
+        if(gOctGame.IsDown(KEY_ESC)) {
+            if(gUi.IsMenu()) {
+                gUi.OffMenu();
+            } else {
+                gUi.OnMenu();
             }
-            playerAnimNum = 1;
         }
-        if(gOctGame.IsPressed('d')) {
-            gPPlayer->AddVector(1, 0);
-            gPPlayer->TurnRight();
-            if(gPPlayer->GetVector().x > MAX_SPEED_X) {
-                gPPlayer->SetVector(MAX_SPEED_X, gPPlayer->GetVector().y);
-            }
-            playerAnimNum = 1;
+        if(gOctGame.IsPressed('a') && !gPPlayer->IsAttacking()) {
+            gPPlayer->Left();
+            isMoved = true;
         }
+        if(gOctGame.IsPressed('d') && !gPPlayer->IsAttacking()) {
+            gPPlayer->Right();
+            isMoved = true;
+        }
+        if(gOctGame.IsPressed(' ')) {
+            gPPlayer->Jump();
+        }
+ 
         if(gOctGame.IsDown('j')) {
             gPPlayer->Attack();
-            playerAnimNum = 2;
-        } else if(gPPlayer->IsAttacking()) {
-            playerAnimNum = 2;
         }
 
-        if(gOctGame.IsPressed(' ') && gPPlayer->IsGround()) {
-            gPPlayer->SetVector(gPPlayer->GetVector().x, -JUNP_SPEED);
-        }
-     
+    
         pVec = gPPlayer->GetVector();
-        gPPlayer->SetAnimationNum(playerAnimNum);
-        if(playerAnimNum == 0) {
-            gPPlayer->AddVector(-(pVec.x != 0 ? ((int)(pVec.x > 0) * 2 - 1) : 0), 0);
-            gPPlayer->SetAnimationNum(0);
+        if(!isMoved) {
+            if(!gPPlayer->IsAttacking()) {
+                gPPlayer->SetAnimationNum(0);
+            }
+            if(pVec.x > 0) {
+                gPPlayer->AddVector(-1, 0);
+            } else if(pVec.x < 0) {
+                gPPlayer->AddVector(1, 0);
+            }
         }
 
         // calculate camera position
@@ -101,16 +98,15 @@ namespace {
         cameraPos.y = 0;
      
         // update
-        gObjectList.Update(&gOctGame, cameraPos);
+        StatusData statusData;
+        statusData.coin = gPPlayer->GetCoin();
+        statusData.hp = gPPlayer->GetHP();
+        if(!gUi.IsMenu()) {
+            gObjectList.Update(&gOctGame, cameraPos);
+        }
         gStage.CheckHitBlock(gObjectList);
         gStage.Draw(&gOctGame, cameraPos);
-
-        gOctGame.Text(0, 0, "coin: %d", gPPlayer->GetCoin());
-        if(gPPlayer->GetHP() > 0) {
-            gOctGame.DrawBox(100, 0, 100 + gPPlayer->GetHP(), 30, 0x00FF00);
-        }
-
-
+        gUi.Update(&gOctGame, statusData);
         gOctGame.Update();
     }
 

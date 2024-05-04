@@ -4,6 +4,8 @@
 #include <string>
 #include "ImageList.hpp"
 
+#define KEY_ESC 27
+
 class OctGame {
 public:
     void Init(int* argc, char** argv, int width, int height);
@@ -19,7 +21,7 @@ public:
     int LoadImageFile(std::string filepath, float sx, float sy, bool isBmp=false);
     int LoadRegionImageFile(std::string filepath, int width, int height, int n, bool isBmp=false);
     int LoadRegionImageFile(std::string filepath, float sx, float sy, int width, int height, int n, bool isBmp=false);
-    void DrawBox(int x1, int y1, int x2, int y2, int color);
+    void DrawBox(int x1, int y1, int x2, int y2, int color, bool fillFlag=false);
     void DrawImage(int handle, int dX, int dY, bool transpose=false, bool isReverse=false);
     void Text(int x, int y, const char* format, ...);
     void ClearScreen();

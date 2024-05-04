@@ -28,29 +28,32 @@ CollisionType Stage::GetColType(int blockNum) {
 }
 
 Vector2d Stage::AdjustVector(Object* obj){
-    Collider* pObjCollider = obj->GetCurrentCollider();
-    Vector2d objPos = obj->GetPosition();
-    Vector2d objVec = obj->GetVector();
-    Vector2d objNewPos = {
-        objPos.x + objVec.x,
-        objPos.y + objVec.y
+//    assert(obj->HasColliders());
+    Collider collider = obj->GetCollider();
+//    Collider collider = obj->GetCurrentCollider();
+    Vector2d pos = obj->GetPosition();
+    Vector2d vec = obj->GetVector();
+    Vector2d newPos = {
+        pos.x + vec.x,
+        pos.y + vec.y
     };
-    Vector2d objNewVec = objVec;
-    bool isFall = objVec.y > 0;
-    bool isRight = objVec.x > 0;
+    Vector2d objNewVec = vec;
+    bool isFall = vec.y > 0;
+    bool isRight = vec.x > 0;
     int topBlkY, bottomBlkY, leftBlkX, rightBlkX;
     int checkBlkX, checkBlkY;
 
-    for(HitBox hitBox : pObjCollider->GetHitBoxes()) {
+    for(HitBox hitBox : collider.GetHitBoxes()) {
         if(!hitBox.isPhysics) continue;
+        if(!hitBox.isActive) continue;
 
         Vector2d rectWorld = {
-            objPos.x + hitBox.pos.x,
-            objPos.y + hitBox.pos.y
+            pos.x + hitBox.pos.x,
+            pos.y + hitBox.pos.y
         };
         Vector2d rectNewWorld = {
-            objNewPos.x + hitBox.pos.x,
-            objNewPos.y + hitBox.pos.y
+            newPos.x + hitBox.pos.x,
+            newPos.y + hitBox.pos.y
         };
 
         int const leftBlkX      = rectWorld.x / this->mBlockSize,
@@ -151,10 +154,10 @@ void Stage::Draw(OctGame* game, Vector2d cameraPos) {
             switch(this->mStage[idx]){
             case 1:
 //                game->drawImage(gGlassBlock, x1, y1);
-                game->DrawBox(x1, y1, x2, y2, 0x00FFFF);
+                game->DrawBox(x1, y1, x2, y2, 0x00FFFF, true);
                 break;
             case 2:
-                game->DrawBox(x1, y1, x2, y2, 0xFFFF00);
+                game->DrawBox(x1, y1, x2, y2, 0xFFFF00, true);
                 break;
             }
         }
