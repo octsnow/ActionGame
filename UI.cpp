@@ -8,8 +8,13 @@ void Status::Update(OctGame* pOctGame, StatusData& data) {
 }
 
 Menu::Menu() {
+    this->mInventoryTop = 0;
     this->mX = 0;
     this->mY = 0;
+
+    for(int i = 0; i < INVENTORY_W * INVENTORY_H; i++) {
+        this->mInventory[i] = HAT::HAT_NONE;
+    }
 }
 
 void Menu::Update(OctGame* pOctGame) {
@@ -33,14 +38,16 @@ void Menu::Update(OctGame* pOctGame) {
     pOctGame->DrawBox(MENU_LEFTTOP_X, MENU_LEFTTOP_Y, MENU_LEFTTOP_X + MENU_W, MENU_LEFTTOP_Y + MENU_H, 0x888888, true);
     for(int x = 0; x < INVENTORY_W; x++) {
         for(int y = 0; y < INVENTORY_H; y++) {
-            pOctGame->DrawBox(
-                    MENU_LEFTTOP_X + INVENTORY_LEFTTOP_X + (x * INVENTORY_GRIDSIZE),
-                    MENU_LEFTTOP_Y + INVENTORY_LEFTTOP_Y + (y * INVENTORY_GRIDSIZE),
-                    MENU_LEFTTOP_X + INVENTORY_LEFTTOP_X + ((x + 1) * INVENTORY_GRIDSIZE),
-                    MENU_LEFTTOP_Y + INVENTORY_LEFTTOP_Y + ((y + 1) * INVENTORY_GRIDSIZE),
-                    0x000000);
+            int alX = MENU_LEFTTOP_X + INVENTORY_LEFTTOP_X + (x * INVENTORY_GRIDSIZE);
+            int alY = MENU_LEFTTOP_Y + INVENTORY_LEFTTOP_Y + (y * INVENTORY_GRIDSIZE);
+            pOctGame->DrawBox(alX, alY, alX + INVENTORY_GRIDSIZE, alY + INVENTORY_GRIDSIZE, 0x000000);
+
+            if(this->GetItem(x, y) != HAT::HAT_NONE) {
+                pOctGame->DrawBox(alX + 5, alY + 5, alX + INVENTORY_GRIDSIZE - 5, alY + INVENTORY_GRIDSIZE - 5, 0x8888FF, true);
+            }
         }
     }
+
     pOctGame->DrawBox(
             MENU_LEFTTOP_X + INVENTORY_LEFTTOP_X + (this->mX * INVENTORY_GRIDSIZE),
             MENU_LEFTTOP_Y + INVENTORY_LEFTTOP_Y + (this->mY * INVENTORY_GRIDSIZE),
@@ -55,6 +62,19 @@ void Menu::SetPosition(unsigned int x, unsigned int y) {
 
     this->mX = x;
     this->mY = y;
+}
+
+void Menu::AddItem(HAT item) {
+    if(item == HAT::HAT_NONE) return;
+    if(this->mInventoryTop >= INVENTORY_W * INVENTORY_H - 1) return;
+
+    this->mInventory[this->mInventoryTop] = item;
+    this->mInventoryTop++;
+}
+
+HAT Menu::GetItem(unsigned int x, unsigned int y) {
+    if(x >= INVENTORY_W || y >= INVENTORY_H) return HAT::HAT_NONE;
+    return this->mInventory[y * INVENTORY_W + x];
 }
 
 void Menu::Left() {
@@ -87,6 +107,10 @@ void UI::Update(OctGame* pOctGame, StatusData& data) {
     if(this->IsMenu()) {
         this->mMenu.Update(pOctGame);
     }
+}
+
+void UI::AddItem(HAT item) {
+    this->mMenu.AddItem(item);
 }
 
 void UI::OnMenu() {

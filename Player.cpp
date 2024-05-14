@@ -134,6 +134,17 @@ int Player::GetCoin() {
     return this->mCoin;
 }
 
+HAT Player::PopItem() {
+    if(this->mItemQueue.empty()) {
+        return HAT::HAT_NONE;
+    }
+
+    HAT item = this->mItemQueue.front();
+    this->mItemQueue.pop();
+
+    return item;
+}
+
 bool Player::IsAttacking() {
     return this->mAttackFlag;
 }
@@ -145,5 +156,6 @@ void Player::EnterObject(const Object* pObject, const HitBox* pHitbox) {
         this->mCoin++;
     } else if(pObject->CompareTag("SlimeHat")) {
         this->mGears.Hat = HAT::HAT_SLIMEHAT;
+        this->mItemQueue.push(HAT::HAT_SLIMEHAT);
     }
 }

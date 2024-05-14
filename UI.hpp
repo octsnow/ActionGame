@@ -26,6 +26,8 @@ public:
     Menu();
     void Update(OctGame* pOctGame);
     void SetPosition(unsigned int x, unsigned int y);
+    void AddItem(HAT item);
+    HAT GetItem(unsigned int x, unsigned int y);
     void Left();
     void Right();
     void Up();
@@ -33,6 +35,7 @@ public:
 
 private:
     HAT mInventory[INVENTORY_W * INVENTORY_H];
+    unsigned int mInventoryTop;
     unsigned int mX, mY;
 };
 
@@ -40,6 +43,7 @@ class UI {
 public:
     UI();
     void Update(OctGame* pOctGame, StatusData& data);
+    void AddItem(HAT item);
     void OnMenu();
     void OffMenu();
     bool IsMenu();

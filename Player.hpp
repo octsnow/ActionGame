@@ -18,6 +18,7 @@ public:
 
     int GetHP();
     int GetCoin();
+    HAT PopItem();
 
     bool IsAttacking();
 
@@ -28,6 +29,7 @@ private:
     int mHP;
     int mCoin;
     Gears mGears;
+    std::queue<HAT> mItemQueue;
 };
 
 std::vector<LinkedNode<Object*>**> CheckHitObject(Player player, LinkedList<Object*>& objList);

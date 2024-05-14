@@ -75,6 +75,13 @@ namespace {
         if(!gUi.IsMenu()) {
             gObjectList.Update(&gOctGame, cameraPos);
         }
+
+        HAT item = gPPlayer->PopItem();
+        while(item != HAT::HAT_NONE) {
+            gUi.AddItem(item);
+            item = gPPlayer->PopItem();
+        }
+
         gStage.CheckHitBlock(gObjectList);
         gStage.Draw(&gOctGame, cameraPos);
         gUi.Update(&gOctGame, statusData);
