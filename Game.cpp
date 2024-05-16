@@ -47,15 +47,6 @@ namespace {
     void Update() {
         Vector2d pPos;
         
-        // move when a or d is pressed
-        if(gOctGame.IsDown(KEY_ESC)) {
-            if(gUi.IsMenu()) {
-                gUi.OffMenu();
-            } else {
-                gUi.OnMenu();
-            }
-        }
-    
         // calculate camera position
         pPos = gPPlayer->GetPosition();
         Vector2d cameraPos;
@@ -76,8 +67,8 @@ namespace {
             gObjectList.Update(&gOctGame, cameraPos);
         }
 
-        HAT item = gPPlayer->PopItem();
-        while(item != HAT::HAT_NONE) {
+        ITEM item = gPPlayer->PopItem();
+        while(item != ITEM::HAT_NONE) {
             gUi.AddItem(item);
             item = gPPlayer->PopItem();
         }

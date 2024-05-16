@@ -75,7 +75,8 @@ OCT_EXPORTS void OctGame::Init(int* argc, char** argv, int width, int height) {
         CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
         VARIABLE_PITCH | FF_ROMAN, NULL
     );
-    SetTextColor(this->mHDC, RGB(0xFF, 0xFF, 0xFF));
+    this->mTextColor = RGB(0xFF, 0xFF, 0xFF);
+    SetTextColor(this->mHDC, this->mTextColor);
     SelectObject(this->mHDC, this->mHFont);
 }
 
@@ -198,13 +199,17 @@ OCT_EXPORTS void OctGame::DrawImage(int handle, int dx, int dy, bool transpose, 
     }
 }
 
-OCT_EXPORTS void OctGame::Text(int x, int y, const char* format, ...) {
+OCT_EXPORTS void OctGame::Text(int x, int y, COLORREF color, const char* format, ...) {
     char buf[256];
     va_list ap;
     va_start(ap, format);
     vsprintf_s(buf, 256, format, ap);
     va_end(ap);
 
+    if(this->mTextColor != color) {
+        this->mTextColor = color;
+        SetTextColor(this->mHDC, this->mTextColor);
+    }
     TextOut(this->mHDC, x, y, buf, lstrlen(buf));
 }
 

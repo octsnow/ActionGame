@@ -2,7 +2,7 @@
 
 #include "Object.hpp"
 
-enum HAT {
+enum ITEM {
     HAT_SLIMEHAT,
     HAT_NONE
 };

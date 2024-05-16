@@ -26,7 +26,7 @@ public:
     int LoadRegionImageFile(std::string filepath, float sx, float sy, int width, int height, int n, bool isBmp=false);
     void DrawBox(int x1, int y1, int x2, int y2, int color, bool fillFlag=false);
     void DrawImage(int handle, int dX, int dY, bool transpose=false, bool isReverse=false);
-    void Text(int x, int y, const char* format, ...);
+    void Text(int x, int y, COLORREF color, const char* format, ...);
     void ClearScreen();
     void ScreenSwap();
 
@@ -42,4 +42,5 @@ private:
     HBITMAP mHBitmap;
     HGDIOBJ mH01dHandle;
     ImageList mImgList;
+    COLORREF mTextColor;
 };

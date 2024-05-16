@@ -1,7 +1,7 @@
 #include "Player.hpp"
 #include <stdio.h>
 
-#define MAX_SPEED_X 5
+#define MAX_SPEED_X 4
 #define MAX_SPEED_Y 50
 #define JUNP_SPEED 20
 
@@ -37,7 +37,7 @@ void Player::Init(OctGame* pOctGame) {
     this->SetTag("Player");
     this->mHP = 100;
     this->mCoin = 0;
-    this->mGears.Hat = HAT::HAT_NONE;
+    this->mGears.Hat = ITEM::HAT_NONE;
 }
 
 void Player::Update(OctGame* pOctGame) {
@@ -123,7 +123,7 @@ void Player::Jump() {
         return;
     }
 
-    this->SetVector(this->GetVector().x, -JUNP_SPEED * (this->mGears.Hat == HAT::HAT_SLIMEHAT ? 1.5 : 1));
+    this->SetVector(this->GetVector().x, -JUNP_SPEED * (this->mGears.Hat == ITEM::HAT_SLIMEHAT ? 1.5 : 1));
 }
 
 int Player::GetHP() {
@@ -134,12 +134,12 @@ int Player::GetCoin() {
     return this->mCoin;
 }
 
-HAT Player::PopItem() {
+ITEM Player::PopItem() {
     if(this->mItemQueue.empty()) {
-        return HAT::HAT_NONE;
+        return ITEM::HAT_NONE;
     }
 
-    HAT item = this->mItemQueue.front();
+    ITEM item = this->mItemQueue.front();
     this->mItemQueue.pop();
 
     return item;
@@ -155,7 +155,7 @@ void Player::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBo
     } else if(pTargetObject->CompareTag("Coin") && !hitbox.CompareTag("attack")) {
         this->mCoin++;
     } else if(pTargetObject->CompareTag("SlimeHat") && !hitbox.CompareTag("attack")) {
-        this->mGears.Hat = HAT::HAT_SLIMEHAT;
-        this->mItemQueue.push(HAT::HAT_SLIMEHAT);
+        this->mGears.Hat = ITEM::HAT_SLIMEHAT;
+        this->mItemQueue.push(ITEM::HAT_SLIMEHAT);
     }
 }

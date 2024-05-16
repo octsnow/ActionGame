@@ -4,7 +4,7 @@
 #include "Item.hpp"
 
 struct Gears {
-    HAT Hat;
+    ITEM Hat;
 };
 
 class Player : public Object {
@@ -19,7 +19,7 @@ public:
 
     int GetHP();
     int GetCoin();
-    HAT PopItem();
+    ITEM PopItem();
 
     bool IsAttacking();
 
@@ -30,7 +30,7 @@ private:
     int mHP;
     int mCoin;
     Gears mGears;
-    std::queue<HAT> mItemQueue;
+    std::queue<ITEM> mItemQueue;
 };
 
 std::vector<LinkedNode<Object*>**> CheckHitObject(Player player, LinkedList<Object*>& objList);
