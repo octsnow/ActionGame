@@ -4,21 +4,21 @@
 
 using namespace std;
 
-HitBox::HitBox(double x, double y, int width, int height, bool isPhysics, bool isAttack)
+HitBox::HitBox(double x, double y, int width, int height, bool isPhysics, string tag)
     : pos(Vector2d(x, y))
     , width(width)
     , height(height)
     , isPhysics(isPhysics)
-    , isAttack(isAttack) {
+    , mTag(tag) {
         this->isActive = false;
-    }
+}
     
-HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack)
+HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, string tag)
     : pos(pos)
     , width(width)
     , height(height)
     , isPhysics(isPhysics)
-    , isAttack(isAttack) {
+    , mTag(tag) {
         this->isActive = false;
 }
 
@@ -54,13 +54,21 @@ bool HitBox::IsHitBox(const HitBox target, const Vector2d pos, const Vector2d ta
     return ( lx <= hx && hx < lx + lw ) && ( ly <= hy && hy < ly + lh );
 }
 
-void Collider::AddHitBox(double x, double y, int width, int height, bool isPhysics, bool isAttack) {
-    HitBox hitbox(x, y, width, height, isPhysics, isAttack);
+string HitBox::GetTag() const {
+    return this->mTag;
+}
+
+bool HitBox::CompareTag(string tag) const {
+    return this->mTag == tag;
+}
+
+void Collider::AddHitBox(double x, double y, int width, int height, bool isPhysics, string tag) {
+    HitBox hitbox(x, y, width, height, isPhysics, tag);
     this->mHitBoxes.push_back(hitbox);
 }
 
-void Collider::AddHitBox(Vector2d pos, int width, int height, bool isPhysics, bool isAttack) {
-    HitBox hitbox(pos, width, height, isPhysics, isAttack);
+void Collider::AddHitBox(Vector2d pos, int width, int height, bool isPhysics, std::string tag) {
+    HitBox hitbox(pos, width, height, isPhysics, tag);
     this->mHitBoxes.push_back(hitbox);
 }
 

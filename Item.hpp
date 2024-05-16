@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Object.hpp"
 
 enum HAT {
@@ -20,11 +21,11 @@ class Coin : public Object {
 public:
     virtual void Init(OctGame* pOctGame) override;
     virtual void Update(OctGame* pOctGame) override;
-    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox) override;
+    virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;
 };
 
 class Hat : public Item {
 public:
     virtual void Init(OctGame* pOctGame) override;
-    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox) override;
+    virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;
 };

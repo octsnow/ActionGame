@@ -1,4 +1,7 @@
 #pragma once
+
+#include "octgamedef.hpp"
+
 #include <GL/freeglut.h>
 #include <iostream>
 #include <string>
@@ -6,7 +9,7 @@
 
 #define KEY_ESC 27
 
-class OctGame {
+class OCT_EXPORTS OctGame {
 public:
     void Init(int* argc, char** argv, int width, int height);
     void Destroy();

@@ -1,8 +1,12 @@
+#pragma once
+
+#include "octgamedef.hpp"
+
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <string>
 
-class ImageList {
+class OCT_EXPORTS ImageList {
 public:
     int LoadImageFile(std::string filepath, bool isBmp=false);
     int LoadImageFile(std::string filepath, float sx, float sy, bool isBmp=false);

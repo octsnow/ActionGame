@@ -4,6 +4,9 @@ using namespace std;
 
 namespace {
     cv::Mat ReadImage(string filepath, bool isBmp) {
+#ifdef OCT_DEBUG
+        cout << "start reading" << filepath << endl;
+#endif
         cv::Mat img;
 
         img = cv::imread(filepath, cv::IMREAD_UNCHANGED);
@@ -25,6 +28,9 @@ namespace {
             }
             img = newImg;
         }
+#ifdef OCT_DEBUG
+        cout << "end reading" << filepath << endl;
+#endif
 
         return img;
     }
@@ -38,21 +44,21 @@ namespace {
 }
 
 /// <summary>Load image and add mImageList.</summary>
-int ImageList::LoadImageFile(string filepath, bool isBmp) {
+OCT_EXPORTS int ImageList::LoadImageFile(string filepath, bool isBmp) {
     this->mImageList.push_back(ReadImage(filepath, isBmp));
     return this->mImageList.size() - 1;
 }
 
-int ImageList::LoadImageFile(string filepath, float sx, float sy, bool isBmp) {
+OCT_EXPORTS int ImageList::LoadImageFile(string filepath, float sx, float sy, bool isBmp) {
     this->mImageList.push_back(ReadImage(filepath, sx, sy, isBmp));
     return this->mImageList.size() - 1;
 }
 
-int ImageList::LoadRegionImageFile(string filepath, int x, int y, int n, bool isBmp) {
+OCT_EXPORTS int ImageList::LoadRegionImageFile(string filepath, int x, int y, int n, bool isBmp) {
     return this->LoadRegionImageFile(filepath, 1, 1, x, y, n, isBmp);
 }
 
-int ImageList::LoadRegionImageFile(string filepath, float sx, float sy, int x, int y, int n, bool isBmp) {
+OCT_EXPORTS int ImageList::LoadRegionImageFile(string filepath, float sx, float sy, int x, int y, int n, bool isBmp) {
     cv::Mat img = ReadImage(filepath, sx, sy, isBmp);
     int handle = this->mImageList.size();
     int nx = x * sx;
@@ -76,7 +82,7 @@ int ImageList::LoadRegionImageFile(string filepath, float sx, float sy, int x, i
     return handle;
 }
 
-cv::Mat* ImageList::GetImage(int handle) {
+OCT_EXPORTS cv::Mat* ImageList::GetImage(int handle) {
     if(handle >= mImageList.size()) {
         return nullptr;
     }

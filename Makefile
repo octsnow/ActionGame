@@ -6,7 +6,7 @@ GAMESRC_FILES = $(wildcard OctGame/*.cpp)
 all: main
 
 main:
-	cl /EHsc /std:c++20 $(SRC_FILES) $(GAMESRC_FILES) $(LIB_FILES) $(INCLUDE_FILES) /Fe:main
+	cl /EHsc /std:c++20 /DOCT_DEBUG $(SRC_FILES) $(GAMESRC_FILES) $(LIB_FILES) $(INCLUDE_FILES) /Fe:main
 
 run: main
 	main

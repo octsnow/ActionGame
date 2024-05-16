@@ -32,7 +32,7 @@ namespace {
     }
 }
 
-void OctGame::Init(int* argc, char** argv, int width, int height) {
+OCT_EXPORTS void OctGame::Init(int* argc, char** argv, int width, int height) {
     this->mWidth = width;
     this->mHeight = height;
 
@@ -79,23 +79,23 @@ void OctGame::Init(int* argc, char** argv, int width, int height) {
     SelectObject(this->mHDC, this->mHFont);
 }
 
-void OctGame::Update() {
+OCT_EXPORTS void OctGame::Update() {
     ResetKeys();
 }
 
-void OctGame::DisplayFunc(void (*func)(void)) {
+OCT_EXPORTS void OctGame::DisplayFunc(void (*func)(void)) {
     glutDisplayFunc(func);
 }
 
-void OctGame::ReshapeFunc(void (*func)(int, int)) {
+OCT_EXPORTS void OctGame::ReshapeFunc(void (*func)(int, int)) {
     glutReshapeFunc(func);
 }
 
-void OctGame::IdleFunc(void (*func)(void)) {
+OCT_EXPORTS void OctGame::IdleFunc(void (*func)(void)) {
     glutIdleFunc(func);
 }
 
-void OctGame::Destroy() {
+OCT_EXPORTS void OctGame::Destroy() {
     SelectObject(this->mHDC, GetStockObject(SYSTEM_FONT));
     DeleteObject(this->mHFont);
 
@@ -104,23 +104,23 @@ void OctGame::Destroy() {
     DeleteObject(this->mHBitmap);
 }
 
-int OctGame::LoadImageFile(string filepath, bool isBmp) {
+OCT_EXPORTS int OctGame::LoadImageFile(string filepath, bool isBmp) {
     return this->mImgList.LoadImageFile(filepath, isBmp);
 }
 
-int OctGame::LoadImageFile(string filepath, float sx, float sy, bool isBmp) {
+OCT_EXPORTS int OctGame::LoadImageFile(string filepath, float sx, float sy, bool isBmp) {
     return this->mImgList.LoadImageFile(filepath, sx, sy, isBmp);
 }
 
-int OctGame::LoadRegionImageFile(string filepath, int width, int height, int n, bool isBmp) {
+OCT_EXPORTS int OctGame::LoadRegionImageFile(string filepath, int width, int height, int n, bool isBmp) {
     return this->mImgList.LoadRegionImageFile(filepath, width, height, n, isBmp);
 }
 
-int OctGame::LoadRegionImageFile(string filepath, float sx, float sy, int width, int height, int n, bool isBmp) {
+OCT_EXPORTS int OctGame::LoadRegionImageFile(string filepath, float sx, float sy, int width, int height, int n, bool isBmp) {
     return this->mImgList.LoadRegionImageFile(filepath, sx, sy, width, height, n, isBmp);
 }
 
-void OctGame::DrawBox(int x1, int y1, int x2, int y2, int color, bool fillFlag) {
+OCT_EXPORTS void OctGame::DrawBox(int x1, int y1, int x2, int y2, int color, bool fillFlag) {
     int minX = x1 < x2 ? x1 : x2;
     int minY = this->mHeight - (y1 > y2 ? y1 : y2) - 1;
     int maxX = x1 > x2 ? x1 : x2;
@@ -158,7 +158,7 @@ void OctGame::DrawBox(int x1, int y1, int x2, int y2, int color, bool fillFlag) 
     }
 }
 
-void OctGame::DrawImage(int handle, int dx, int dy, bool transpose, bool isReverse){
+OCT_EXPORTS void OctGame::DrawImage(int handle, int dx, int dy, bool transpose, bool isReverse){
     cv::Mat* img = this->mImgList.GetImage(handle);
     uchar* data = img->data;
 
@@ -198,7 +198,7 @@ void OctGame::DrawImage(int handle, int dx, int dy, bool transpose, bool isRever
     }
 }
 
-void OctGame::Text(int x, int y, const char* format, ...) {
+OCT_EXPORTS void OctGame::Text(int x, int y, const char* format, ...) {
     char buf[256];
     va_list ap;
     va_start(ap, format);
@@ -208,23 +208,23 @@ void OctGame::Text(int x, int y, const char* format, ...) {
     TextOut(this->mHDC, x, y, buf, lstrlen(buf));
 }
 
-void OctGame::ClearScreen(){
+OCT_EXPORTS void OctGame::ClearScreen(){
     memset(this->mScreen, 0, this->mHeight * this->mWidth * 3);
 }
 
-void OctGame::ScreenSwap() {
+OCT_EXPORTS void OctGame::ScreenSwap() {
     glDrawPixels(this->mWidth, this->mHeight, GL_RGB, GL_UNSIGNED_BYTE, this->mScreen );
     glutSwapBuffers();
 }
 
-bool OctGame::IsPressed(char key) {
+OCT_EXPORTS bool OctGame::IsPressed(char key) {
     return pressedKeys[(int)key];
 }
 
-bool OctGame::IsUp(char key) {
+OCT_EXPORTS bool OctGame::IsUp(char key) {
     return upKeys[(int)key];
 }
 
-bool OctGame::IsDown(char key) {
+OCT_EXPORTS bool OctGame::IsDown(char key) {
     return downKeys[(int)key];
 }

@@ -1,6 +1,15 @@
 #include "Game.hpp"
+#include <iostream>
 
+#ifdef DEBUG
+#pragma comment(lib, "opencv_world455d.lib")
+
+#else
 #pragma comment(lib, "opencv_world455.lib")
+
+#endif
+
+using namespace std;
 
 /*
 int FrameTime = 1000 / 60;
@@ -66,7 +75,6 @@ void resize(int w, int h) {
 int main(int argc, char** argv) {
     Game game;
     game.Start(argc, argv);
-
 
     /*
     octGame.Init(&argc, argv, 800, 600);

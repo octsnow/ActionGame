@@ -67,11 +67,11 @@ namespace {
 
         if(h.isActive && th.isActive && h.IsHitBox(th, o->GetPosition(), to->GetPosition())) {
             if(std::find(d->lastHitBoxes.begin(), d->lastHitBoxes.end(), targetHandle) == d->lastHitBoxes.end()) {
-                o->EnterObject(to, &th);
-                to->EnterObject(o, &h);
+                o->EnterObject(h, to, &th);
+                to->EnterObject(th, o, &h);
             } else {
-                o->StayObject(to, &th);
-                to->StayObject(o, &h);
+                o->StayObject(h, to, &th);
+                to->StayObject(th, o, &h);
             }
 
             result = true;
@@ -224,7 +224,7 @@ Collider Object::GetCollider() {
                     hitBoxes[i].width,
                     hitBoxes[i].height,
                     hitBoxes[i].isPhysics,
-                    hitBoxes[i].isAttack);
+                    hitBoxes[i].GetTag());
             if(hitBoxes[i].isActive) {
                 collider.ActiveHitBox(i);
             }
@@ -371,6 +371,7 @@ void Object::Draw(OctGame* pOctGame, Vector2d cameraPos) {
         this->mPosition.y + this->mOffsetPosition.y - cameraPos.y,
         true, this->mIsLeft);
 
+#ifdef OCT_DEBUG
     for(HitBox hitBox : this->GetCollider().GetHitBoxes()) {
         if(!hitBox.isActive) continue;
         Vector2d ltPos, rbPos;
@@ -378,12 +379,13 @@ void Object::Draw(OctGame* pOctGame, Vector2d cameraPos) {
         ltPos.y = hitBox.pos.y + this->GetPosition().y - cameraPos.y;
         rbPos.x = ltPos.x + hitBox.width - 1;
         rbPos.y = ltPos.y + hitBox.height - 1;
-        if(hitBox.isAttack) {
+        if(hitBox.CompareTag("attack")) {
             pOctGame->DrawBox(ltPos.x, ltPos.y, rbPos.x, rbPos.y, 0xFF0000);
         } else {
             pOctGame->DrawBox(ltPos.x, ltPos.y, rbPos.x, rbPos.y, 0x00FF00);
         }
     }
+#endif
 }
 
 void Object::InitParams() {

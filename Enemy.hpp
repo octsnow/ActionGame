@@ -1,4 +1,5 @@
 #pragma once
+
 #include "OctGame/OctGame.hpp"
 #include "Object.hpp"
 
@@ -11,7 +12,7 @@ public:
     virtual void Draw(OctGame* game, Vector2d cameraPos) override;
     void Damage();
 
-    virtual void EnterObject(const Object* obj, const HitBox* hb) override;
+    virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;
 
 private:
     int mHP;

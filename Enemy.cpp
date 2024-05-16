@@ -14,7 +14,7 @@ void Enemy::Init(OctGame* pOctGame) {
     this->SetSize(50, 50);
     this->SetPosition(30, 0);
 
-    collider.AddHitBox(1, 0, 50, 50, true, false);
+    collider.AddHitBox(1, 0, 50, 50, true);
     this->SetCollider(collider);
     this->SetColliderSet({0});
     this->SwitchCollider(0);
@@ -79,8 +79,8 @@ void Enemy::Damage() {
     }
 }
 
-void Enemy::EnterObject(const Object* obj, const HitBox* hb) {
-    if(obj->CompareTag("Player") && hb->isAttack) {
+void Enemy::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+    if(pTargetObject->CompareTag("Player") && pTargetHitbox->CompareTag("attack")) {
         this->Damage();
     }
 }

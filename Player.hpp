@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Object.hpp"
 #include "Item.hpp"
 
@@ -22,7 +23,7 @@ public:
 
     bool IsAttacking();
 
-    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox) override;
+    virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;
 private:
     clock_t mAttackCountTime;
     bool mAttackFlag;

@@ -118,7 +118,9 @@ namespace {
 }
 
 void Game::Start(int argc, char** argv) {
+    cout << "start initializing" << endl;
     Init(argc, argv);
+    cout << "Initialized" << endl;
     glutMainLoop();
     Term();
 }

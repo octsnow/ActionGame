@@ -1,3 +1,5 @@
+#pragma once
+
 #include "OctGame/OctGame.hpp"
 #include "Item.hpp"
 

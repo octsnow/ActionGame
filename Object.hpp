@@ -93,8 +93,8 @@ public:
     virtual void Draw(OctGame* pOctGame, Vector2d cameraPos);
 
     // event call backs
-    virtual void EnterObject(const Object* pObject, const HitBox* pHitbox) {};
-    virtual void StayObject(const Object* pObject, const HitBox* pHitbox) {};
+    virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {};
+    virtual void StayObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {};
 
 protected:
     // Methods

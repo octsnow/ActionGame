@@ -26,8 +26,8 @@ void Player::Init(OctGame* pOctGame) {
         pOctGame->LoadImageFile("images/player_punch0.bmp", true),
         pOctGame->LoadImageFile("images/player_punch1.bmp", true)});
 
-    attackCollider.AddHitBox(20, 0, 60, 100, true, false);
-    attackCollider.AddHitBox(60, 0, 40, 100, false, true);
+    attackCollider.AddHitBox(20, 0, 60, 100, true);
+    attackCollider.AddHitBox(60, 0, 40, 100, false, "attack");
     this->SetCollider(attackCollider);
     this->SetColliderSet({0});
     this->SetColliderSet({0, 1});
@@ -149,12 +149,12 @@ bool Player::IsAttacking() {
     return this->mAttackFlag;
 }
 
-void Player::EnterObject(const Object* pObject, const HitBox* pHitbox) {
-    if(pObject->CompareTag("Enemy")) {
+void Player::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+    if(pTargetObject->CompareTag("Enemy") && !hitbox.CompareTag("attack")) {
         this->Damage();
-    } else if(pObject->CompareTag("Coin")) {
+    } else if(pTargetObject->CompareTag("Coin") && !hitbox.CompareTag("attack")) {
         this->mCoin++;
-    } else if(pObject->CompareTag("SlimeHat")) {
+    } else if(pTargetObject->CompareTag("SlimeHat") && !hitbox.CompareTag("attack")) {
         this->mGears.Hat = HAT::HAT_SLIMEHAT;
         this->mItemQueue.push(HAT::HAT_SLIMEHAT);
     }
