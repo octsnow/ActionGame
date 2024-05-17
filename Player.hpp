@@ -21,6 +21,8 @@ public:
     int GetCoin();
     ITEM PopItem();
 
+    void SetGears(Gears gears);
+
     bool IsAttacking();
 
     virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;

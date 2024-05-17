@@ -145,6 +145,10 @@ ITEM Player::PopItem() {
     return item;
 }
 
+void Player::SetGears(Gears gears) {
+    this->mGears = gears;
+}
+
 bool Player::IsAttacking() {
     return this->mAttackFlag;
 }
@@ -155,7 +159,6 @@ void Player::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBo
     } else if(pTargetObject->CompareTag("Coin") && !hitbox.CompareTag("attack")) {
         this->mCoin++;
     } else if(pTargetObject->CompareTag("SlimeHat") && !hitbox.CompareTag("attack")) {
-        this->mGears.Hat = ITEM::HAT_SLIMEHAT;
         this->mItemQueue.push(ITEM::HAT_SLIMEHAT);
     }
 }

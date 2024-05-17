@@ -12,13 +12,20 @@ void Status::Update(OctGame* pOctGame, StatusData& data) {
 
 Menu::Menu() {
     this->mInventoryTop = 0;
-    this->mX = 0;
-    this->mY = 0;
-    this->mIsPulldown = false;
+    this->Init();
 
     for(int i = 0; i < INVENTORY_W * INVENTORY_H; i++) {
         this->mInventory[i] = ITEM::HAT_NONE;
     }
+
+    this->mGears.Hat = ITEM::HAT_NONE;
+}
+
+void Menu::Init() {
+    this->mX = 0;
+    this->mY = 0;
+    this->mIsPulldown = false;
+    this->mPulldownIndex = 0;
 }
 
 void Menu::Update(OctGame* pOctGame) {
@@ -45,7 +52,7 @@ void Menu::Update(OctGame* pOctGame) {
     }
 
     // draw
-    pOctGame->DrawBox(MENU_LEFTTOP_X, MENU_LEFTTOP_Y, MENU_LEFTTOP_X + MENU_W, MENU_LEFTTOP_Y + MENU_H, 0x888888, true);
+    pOctGame->DrawBox(MENU_LEFTTOP_X, MENU_LEFTTOP_Y, MENU_LEFTTOP_X + MENU_W, MENU_LEFTTOP_Y + MENU_H, 0xCFA063, true);
 
     int invLtX = MENU_LEFTTOP_X + INVENTORY_LEFTTOP_X;
     int invLtY = MENU_LEFTTOP_Y + INVENTORY_LEFTTOP_Y;
@@ -56,7 +63,7 @@ void Menu::Update(OctGame* pOctGame) {
             pOctGame->DrawBox(alX, alY, alX + INVENTORY_GRIDSIZE, alY + INVENTORY_GRIDSIZE, 0x000000);
 
             if(this->GetItem(x, y) != ITEM::HAT_NONE) {
-                pOctGame->DrawBox(alX + 5, alY + 5, alX + INVENTORY_GRIDSIZE - 5, alY + INVENTORY_GRIDSIZE - 5, 0x8888FF, true);
+                pOctGame->DrawBox(alX + 5, alY + 5, alX + INVENTORY_GRIDSIZE - 5, alY + INVENTORY_GRIDSIZE - 5, 0x4FBFDF, true);
             }
         }
     }
@@ -71,9 +78,27 @@ void Menu::Update(OctGame* pOctGame) {
     if(this->mIsPulldown) {
         int alX = invLtX + (this->mX * INVENTORY_GRIDSIZE) + (INVENTORY_GRIDSIZE / 2);
         int alY = invLtY + (this->mY * INVENTORY_GRIDSIZE) + (INVENTORY_GRIDSIZE / 2);
-        pOctGame->DrawBox(alX, alY, alX + INVENTORY_PULLDOWN_W, alY + INVENTORY_PULLDOWN_H, 0xFFFFFF, true);
-        pOctGame->Text(alX, alY, RGB(0x00, 0x00, 0x00), "equip");
-        pOctGame->Text(alX, alY + 30, RGB(0x00, 0x00, 0x00), "remove");
+        pOctGame->DrawBox(
+            alX, alY,
+            alX + INVENTORY_PULLDOWN_W, alY + INVENTORY_PULLDOWN_H,
+            0xFFFFFF, true);
+        pOctGame->DrawBox(
+            alX, alY,
+            alX + INVENTORY_PULLDOWN_W, alY + INVENTORY_PULLDOWN_H,
+            0x000000);
+        pOctGame->DrawBox(
+            alX + 10, alY + 10 + (INVENTORY_PULLDOWN_ELEM_H * this->mPulldownIndex),
+//            alX + INVENTORY_PULLDOWN_W,
+            alX + 20,
+//            alY + (INVENTORY_PULLDOWN_ELEM_H * (this->mPulldownIndex + 1)),
+            alY + 20 + (INVENTORY_PULLDOWN_ELEM_H * this->mPulldownIndex),
+            0x888888, true);
+        for(int i = 0; i < this->mPulldownList.size(); i++) {
+            pOctGame->Text(
+                30 + alX, alY + (INVENTORY_PULLDOWN_ELEM_H * i),
+                15, RGB(0x00, 0x00, 0x00),
+                this->mPulldownList[i].name.c_str());
+        }
     }
 }
 
@@ -98,6 +123,14 @@ ITEM Menu::GetItem(unsigned int x, unsigned int y) {
     return this->mInventory[y * INVENTORY_W + x];
 }
 
+ITEM Menu::GetCurrentItem() {
+    return this->GetItem(this->mX, this->mY);
+}
+
+Gears Menu::GetGears() {
+    return this->mGears;
+}
+
 bool Menu::IsRoot() {
     return !this->mIsPulldown;
 }
@@ -115,25 +148,60 @@ void Menu::Right() {
 }
 
 void Menu::Up() {
-    if(this->mY == 0) return;
-    if(this->mIsPulldown) return;
-    this->mY--;
+    if(this->mIsPulldown) {
+        if(this->mPulldownIndex == 0) return;
+        this->mPulldownIndex--;
+    } else {
+        if(this->mY == 0) return;
+        this->mY--;
+    }
 }
 
 void Menu::Down() {
-    if(this->mY >= INVENTORY_H - 1) return;
-    if(this->mIsPulldown) return;
-    this->mY++;
+    if(this->mIsPulldown) {
+        if(this->mPulldownIndex >= this->mPulldownList.size() - 1) return;
+        this->mPulldownIndex++;
+    } else {
+        if(this->mY >= INVENTORY_H - 1) return;
+        this->mY++;
+    }
 }
 
 void Menu::Select() {
-    if(this->GetItem(this->mX, this->mY) != ITEM::HAT_NONE) {
+    if(this->mIsPulldown) {
+        this->mPulldownList[this->mPulldownIndex].f(this);
+        this->mIsPulldown = false;
+    } else {
+        if(this->GetItem(this->mX, this->mY) == ITEM::HAT_NONE) return;
         this->mIsPulldown = true;
     }
 }
 
 void Menu::Cansel() {
     this->mIsPulldown = false;
+}
+
+void Menu::Equip() {
+    // TODO: fix condition
+    ITEM item = this->GetCurrentItem();
+    if(item == ITEM::HAT_SLIMEHAT) {
+        this->mGears.Hat = item;
+    }
+}
+
+void Menu::Remove() {
+    // TODO: fix condition
+    ITEM item = this->GetCurrentItem();
+    if(item == this->mGears.Hat) {
+        this->mGears.Hat = ITEM::HAT_NONE;
+    }
+}
+
+void Menu::CallbackEquip(Menu* pMenu) {
+    pMenu->Equip();
+}
+void Menu::CallbackRemove(Menu* pMenu) {
+    pMenu->Remove();
 }
 
 UI::UI() {
@@ -169,4 +237,8 @@ void UI::OffMenu() {
 
 bool UI::IsMenu() {
     return this->mIsMenu;
+}
+
+Gears UI::GetGears() {
+    return this->mMenu.GetGears();
 }

@@ -58,11 +58,14 @@ namespace {
             cameraPos.x = pPos.x - static_cast<int>(SCREEN_W / 2);
         }
         cameraPos.y = 0;
+
+        gPPlayer->SetGears(gUi.GetGears());
      
         // update
         StatusData statusData;
         statusData.coin = gPPlayer->GetCoin();
         statusData.hp = gPPlayer->GetHP();
+
         if(!gUi.IsMenu()) {
             gObjectList.Update(&gOctGame, cameraPos);
         }

@@ -27,6 +27,7 @@ public:
     void DrawBox(int x1, int y1, int x2, int y2, int color, bool fillFlag=false);
     void DrawImage(int handle, int dX, int dY, bool transpose=false, bool isReverse=false);
     void Text(int x, int y, COLORREF color, const char* format, ...);
+    void Text(int x, int y, COLORREF color, int size, const char* format, ...);
     void ClearScreen();
     void ScreenSwap();
 

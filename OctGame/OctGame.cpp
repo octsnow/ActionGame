@@ -213,6 +213,31 @@ OCT_EXPORTS void OctGame::Text(int x, int y, COLORREF color, const char* format,
     TextOut(this->mHDC, x, y, buf, lstrlen(buf));
 }
 
+OCT_EXPORTS void OctGame::Text(int x, int y, COLORREF color, int size, const char* format, ...) {
+    this->mHFont = CreateFont(
+        size, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS,
+        CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+        VARIABLE_PITCH | FF_ROMAN, NULL
+    );
+
+    HFONT font = static_cast<HFONT>(SelectObject(this->mHDC, this->mHFont));
+
+    char buf[256];
+    va_list ap;
+    va_start(ap, format);
+    vsprintf_s(buf, 256, format, ap);
+    va_end(ap);
+
+    if(this->mTextColor != color) {
+        this->mTextColor = color;
+        SetTextColor(this->mHDC, this->mTextColor);
+    }
+    TextOut(this->mHDC, x, y, buf, lstrlen(buf));
+
+    SelectObject(this->mHDC, font);
+}
+
 OCT_EXPORTS void OctGame::ClearScreen(){
     memset(this->mScreen, 0, this->mHeight * this->mWidth * 3);
 }
