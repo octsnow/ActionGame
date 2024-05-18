@@ -141,9 +141,10 @@ void Stage::CheckHitBlock(ObjectList& objectList) {
     });
 }
 
-void Stage::Draw(OctGame* game, Vector2d cameraPos) {
+void Stage::Draw(OctGame* game, Camera* pCamera) {
     for(int y = 0; y < this->mScreenHeight && y < this->mScreenHeight / this->mBlockSize + 1; y++){
         for(int x = 0; x < this->mStageWidth && x < this->mScreenWidth / this->mBlockSize + 1; x++){
+            Vector2d cameraPos = pCamera->GetPosition();
             int x1 = x * this->mBlockSize - static_cast<int>(cameraPos.x) % this->mBlockSize,
                 y1 = y * this->mBlockSize,
                 x2 = (x + 1) * this->mBlockSize - static_cast<int>(cameraPos.x) % this->mBlockSize,

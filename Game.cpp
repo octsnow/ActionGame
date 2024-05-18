@@ -46,19 +46,10 @@ namespace {
     UI gUi;
 
     void Update() {
-        Vector2d pPos;
+        Camera camera(STAGE_W, STAGE_H, BLOCK_SIZE, SCREEN_W);
         
         // calculate camera position
-        pPos = gPPlayer->GetPosition();
-        Vector2d cameraPos;
-        if(pPos.x < static_cast<int>(SCREEN_W / 2)) {
-            cameraPos.x = 0;
-        } else if(pPos.x > STAGE_W * BLOCK_SIZE - static_cast<int>(SCREEN_W / 2)) {
-            cameraPos.x = STAGE_W * BLOCK_SIZE - SCREEN_W;
-        } else {
-            cameraPos.x = pPos.x - static_cast<int>(SCREEN_W / 2);
-        }
-        cameraPos.y = 0;
+        camera.SetPlayerPosition(gPPlayer->GetPosition());
 
         gPPlayer->SetGears(gUi.GetGears());
      
@@ -68,7 +59,7 @@ namespace {
         statusData.hp = gPPlayer->GetHP();
 
         if(!gUi.IsMenu()) {
-            gObjectList.Update(&gOctGame, cameraPos);
+            gObjectList.Update(&gOctGame, &camera);
         }
 
         ITEM_ID item = gPPlayer->PopItem();
@@ -78,7 +69,7 @@ namespace {
         }
 
         gStage.CheckHitBlock(gObjectList);
-        gStage.Draw(&gOctGame, cameraPos);
+        gStage.Draw(&gOctGame, &camera);
         gUi.Update(&gOctGame, statusData);
         gOctGame.Update();
     }

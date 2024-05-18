@@ -9,6 +9,7 @@
 #include "Stage.hpp"
 #include "Character.hpp"
 #include "UI.hpp"
+#include "Camera.hpp"
 
 enum class Tag {
     Player = 1,

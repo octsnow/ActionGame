@@ -7,6 +7,7 @@
 #include <tuple>
 
 #include "OctGame/OctGame.hpp"
+#include "Camera.hpp"
 #include "Collider.hpp"
 
 typedef uint32_t HitBoxHandle;
@@ -90,7 +91,7 @@ public:
 
     virtual void Init(OctGame* pOctGame) {};
     virtual void Update(OctGame* pOctGame) {};
-    virtual void Draw(OctGame* pOctGame, Vector2d cameraPos);
+    virtual void Draw(OctGame* pOctGame, Camera* pCamera);
 
     // event call backs
     virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {};
@@ -178,7 +179,7 @@ public:
     ObjectList(unsigned int worldWidth, unsigned int worldHeight);
     void AppendObject(Object* pObject);
     void CheckHitObjects() const;
-    void Update(OctGame* pOctGame, Vector2d);
+    void Update(OctGame* pOctGame, Camera* pCamera);
     template <typename Func> void for_each(Func func) {
         this->mObjectList.for_each(func);
     }

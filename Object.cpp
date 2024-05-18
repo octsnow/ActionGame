@@ -367,19 +367,18 @@ Object* Object::PopObject() {
     return pObject;
 }
 
-void Object::Draw(OctGame* pOctGame, Vector2d cameraPos) {
+void Object::Draw(OctGame* pOctGame, Camera* pCamera) {
+    Vector2d viewPos = pCamera->CalcViewPosition(this->mPosition.x + this->mOffsetPosition.x, this->mPosition.y + this->mOffsetPosition.y);
     pOctGame->DrawImage(
         this->GetImageHandle(),
-        this->mPosition.x + this->mOffsetPosition.x - cameraPos.x,
-        this->mPosition.y + this->mOffsetPosition.y - cameraPos.y,
+        viewPos.x, viewPos.y,
         true, this->mIsLeft);
 
 #ifdef OCT_DEBUG
     for(HitBox hitBox : this->GetCollider().GetHitBoxes()) {
         if(!hitBox.isActive) continue;
         Vector2d ltPos, rbPos;
-        ltPos.x = hitBox.pos.x + this->GetPosition().x - cameraPos.x;
-        ltPos.y = hitBox.pos.y + this->GetPosition().y - cameraPos.y;
+        ltPos = pCamera->CalcViewPosition(hitBox.pos.x + this->GetPosition().x, hitBox.pos.y + this->GetPosition().y);
         rbPos.x = ltPos.x + hitBox.width - 1;
         rbPos.y = ltPos.y + hitBox.height - 1;
         if(hitBox.CompareTag("attack")) {
@@ -425,12 +424,12 @@ void ObjectList::CheckHitObjects() const {
     this->mHitBoxList.checkHit();
 }
 
-void ObjectList::Update(OctGame* pOctGame, Vector2d cameraPos) {
+void ObjectList::Update(OctGame* pOctGame, Camera* pCamera) {
     this->CheckHitObjects();
     this->mObjectList.for_each([&](LinkedNode<ObjectListData>* node) {
         Object* pObject = node->GetValue()->pObject;
         pObject->UpdatePosition();
-        pObject->Draw(pOctGame, cameraPos);
+        pObject->Draw(pOctGame, pCamera);
         pObject->Update(pOctGame);
     });
     this->mObjectList.for_each([&](LinkedNode<ObjectListData>* node) {

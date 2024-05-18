@@ -6,30 +6,39 @@ using namespace std;
 
 #define MAX_SPEED_Y 50
 #define X_SPEED 1
+#define HP_OFFSET_Y 20
+#define HP_H 10
 
-void Enemy::Draw(OctGame* pOctGame, Vector2d cameraPos) {
-    Object::Draw(pOctGame, cameraPos);
+void Enemy::Init(OctGame* pOctGame) {
+    this->SetTag("Enemy");
+    this->TurnRight();
+}
+
+void Enemy::Draw(OctGame* pOctGame, Camera* pCamera) {
+    Object::Draw(pOctGame, pCamera);
 
     int hpWidth = this->mWidth * ((float)this->mHP / this->mMaxHP);
+    Vector2d viewPos = pCamera->CalcViewPosition(this->mPosition.x, this->mPosition.y - HP_OFFSET_Y);
 
     pOctGame->DrawBox(
-            this->mPosition.x - cameraPos.x,
-            this->mPosition.y - 20,
-            this->mPosition.x + hpWidth - cameraPos.x,
-            this->mPosition.y - 10,
+            viewPos.x, viewPos.y,
+            viewPos.x + hpWidth, viewPos.y + HP_H,
             0x00FF00, true
     );
 
     pOctGame->DrawBox(
-            this->mPosition.x - cameraPos.x + hpWidth,
-            this->mPosition.y - 20,
-            this->mPosition.x + this->mWidth - cameraPos.x,
-            this->mPosition.y - 10,
+            viewPos.x + hpWidth, viewPos.y,
+            viewPos.x + this->mWidth, viewPos.y + HP_H,
             0xFF0000, true
     );
 }
 
+ENEMY_ID Enemy::GetEnemyID() const {
+    return this->mEnemyID;
+}
+
 void Slime::Init(OctGame* pOctGame) {
+    Enemy::Init(pOctGame);
     Collider collider;
     this->SetImageHandle(0, {
         pOctGame->LoadImageFile("images/slime.bmp", true)});
@@ -41,10 +50,9 @@ void Slime::Init(OctGame* pOctGame) {
     this->SetColliderSet({0});
     this->SwitchCollider(0);
 
-    this->SetTag("Slime");
-    this->TurnRight();
     this->mMaxHP = 100;
     this->mHP = this->mMaxHP;
+    this->mEnemyID = ENEMY_ID::ENEMY_SLIME;
 }
 
 void Slime::Update(OctGame* pOctGame) {
@@ -67,27 +75,6 @@ void Slime::Update(OctGame* pOctGame) {
     }
 }
 
-void Slime::Draw(OctGame* game, Vector2d cameraPos) {
-    Object::Draw(game, cameraPos);
-    int hpWidth = this->mWidth * ((float)this->mHP / this->mMaxHP);
-
-    game->DrawBox(
-            this->mPosition.x - cameraPos.x,
-            this->mPosition.y - 20,
-            this->mPosition.x + hpWidth - cameraPos.x,
-            this->mPosition.y - 10,
-            0x00FF00, true
-    );
-
-    game->DrawBox(
-            this->mPosition.x - cameraPos.x + hpWidth,
-            this->mPosition.y - 20,
-            this->mPosition.x + this->mWidth - cameraPos.x,
-            this->mPosition.y - 10,
-            0xFF0000, true
-    );
-}
-
 void Slime::Damage() {
     if(this->mHP > 0) {
         this->mHP-=10;
@@ -108,6 +95,7 @@ void Slime::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox
 }
 
 void Fire::Init(OctGame* pOctGame) {
+    Enemy::Init(pOctGame);
     Collider collider;
     this->SetImageHandle(0, {
         pOctGame->LoadImageFile("images/slime.bmp", true)});
@@ -119,10 +107,9 @@ void Fire::Init(OctGame* pOctGame) {
     this->SetColliderSet({0});
     this->SwitchCollider(0);
 
-    this->SetTag("Slime");
-    this->TurnRight();
     this->mMaxHP = 100;
     this->mHP = this->mMaxHP;
+    this->mEnemyID = ENEMY_ID::ENEMY_FIRE;
 }
 
 void Fire::Update(OctGame* pOctGame) {
@@ -145,9 +132,10 @@ void Fire::Update(OctGame* pOctGame) {
     }
 }
 
-void Fire::Draw(OctGame* pOctGame, Vector2d cameraPos) {
-    pOctGame->DrawBox(this->mPosition.x, this->mPosition.y, this->mPosition.x + this->mWidth, this->mPosition.y + this->mHeight, 0xFF3300, true);
-    Enemy::Draw(pOctGame, cameraPos);
+void Fire::Draw(OctGame* pOctGame, Camera* pCamera) {
+    Vector2d viewPos = pCamera->CalcViewPosition(this->GetPosition());
+    pOctGame->DrawBox(viewPos.x, viewPos.y, viewPos.x + this->GetWidth(), viewPos.y + this->GetWidth(), 0xFF3300, true);
+    Enemy::Draw(pOctGame, pCamera);
 }
 
 void Fire::Damage() {
@@ -164,7 +152,4 @@ void Fire::Damage() {
 }
 
 void Fire::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
-    if(pTargetObject->CompareTag("Player") && pTargetHitbox->CompareTag("attack")) {
-        this->Damage();
-    }
 }

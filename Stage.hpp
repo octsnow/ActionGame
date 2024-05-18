@@ -16,7 +16,7 @@ public:
 	Vector2d AdjustVector(Object* obj);
 	CollisionType GetColType(int blockNum);
     void CheckHitBlock(ObjectList& objList);
-    void Draw(OctGame* game, Vector2d cameraPos);
+    void Draw(OctGame* game, Camera* pCamera);
 
 private:
     std::vector<int> mStage;

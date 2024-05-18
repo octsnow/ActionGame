@@ -1,4 +1,5 @@
 #include "Player.hpp"
+#include "Enemy.hpp"
 #include <stdio.h>
 
 #define MAX_SPEED_X 4
@@ -152,8 +153,12 @@ bool Player::IsAttacking() {
 }
 
 void Player::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
-    if(pTargetObject->CompareTag("Enemy") && !hitbox.CompareTag("attack")) {
-        this->Damage();
+    if(pTargetObject->CompareTag("Enemy")) {
+        const Enemy* enemy = dynamic_cast<const Enemy*>(pTargetObject);
+        if(enemy == nullptr) return;
+        if(enemy->GetEnemyID() == ENEMY_ID::ENEMY_FIRE || !hitbox.CompareTag("attack")) {
+            this->Damage();
+        }
     } else if(pTargetObject->CompareTag("Coin") && !hitbox.CompareTag("attack")) {
         this->mCoin++;
     }
