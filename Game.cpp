@@ -12,15 +12,16 @@
 #define STAGE_W 100
 #define BLOCK_SIZE 50
 #define GRAVITY 1
-#define FPS 1
+#define FPS 60
 #define OBJECT_COIN 0
 
 using namespace std;
 
 namespace {
-    const int FrameTime = 1000 / FPS;
+    const clock_t FrameTime = 1000 / FPS;
     struct {
-        int countTime = 0;
+        clock_t countTime = 0;
+        clock_t lastTime;
     } gSysInf;
 
     const int gStageData[STAGE_H * STAGE_W] = {
@@ -70,8 +71,8 @@ namespace {
             gObjectList.Update(&gOctGame, cameraPos);
         }
 
-        ITEM item = gPPlayer->PopItem();
-        while(item != ITEM::HAT_NONE) {
+        ITEM_ID item = gPPlayer->PopItem();
+        while(item != ITEM_ID::ITEM_ID_NONE) {
             gUi.AddItem(item);
             item = gPPlayer->PopItem();
         }
@@ -87,16 +88,15 @@ namespace {
     }
 
     void display() {
-        glClear(GL_COLOR_BUFFER_BIT);
-
         if(gSysInf.countTime >= FrameTime) {
+            glClear(GL_COLOR_BUFFER_BIT);
             gOctGame.ClearScreen();
             Update();
             gSysInf.countTime -= FrameTime;
+            gOctGame.ScreenSwap();
         }
-        gSysInf.countTime += time(NULL);
-
-        gOctGame.ScreenSwap();
+        gSysInf.countTime += clock() - gSysInf.lastTime;
+        gSysInf.lastTime = clock();
     }
 
     void resize(int w, int h) {
@@ -120,11 +120,13 @@ void Game::Start(int argc, char** argv) {
 }
 
 void Game::Init(int argc, char** argv) {
-    Enemy* enemy;
+    Slime* slime;
+    Fire* fire;
     Coin* coin;
 
     gPPlayer = new Player();
-    enemy = new Enemy();
+    slime = new Slime();
+    fire = new Fire();
     coin = new Coin();
 
     // load image
@@ -136,7 +138,8 @@ void Game::Init(int argc, char** argv) {
     coin->SetPosition(BLOCK_SIZE * 12, SCREEN_H - BLOCK_SIZE * 5);
 
     gPPlayer->SetGravity(GRAVITY);
-    enemy->SetGravity(GRAVITY);
+    slime->SetGravity(GRAVITY);
+    fire->SetGravity(GRAVITY);
 
     gStage.SetStage(gStageData, STAGE_W, STAGE_H, BLOCK_SIZE);
     gStage.SetScreenSize(SCREEN_W, SCREEN_H);
@@ -148,7 +151,8 @@ void Game::Init(int argc, char** argv) {
 
     gObjectList.AppendObject(coin);
     gObjectList.AppendObject(gPPlayer);
-    gObjectList.AppendObject(enemy);
+    gObjectList.AppendObject(slime);
+    gObjectList.AppendObject(fire);
     gObjectList.for_each([&](LinkedNode<ObjectListData>* node) {
             Object* pObject = node->GetValue()->pObject;
             pObject->Init(&gOctGame);
@@ -157,6 +161,8 @@ void Game::Init(int argc, char** argv) {
     glClearColor(0.0, 0.0, 1.0, 0.0);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
+
+    gSysInf.lastTime = clock();
 }
 
 void Game::Term() {

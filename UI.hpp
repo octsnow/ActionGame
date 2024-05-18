@@ -42,9 +42,9 @@ public:
     void Init();
     void Update(OctGame* pOctGame);
     void SetPosition(unsigned int x, unsigned int y);
-    void AddItem(ITEM item);
-    ITEM GetItem(unsigned int x, unsigned int y);
-    ITEM GetCurrentItem();
+    void AddItem(ITEM_ID item);
+    ITEM_ID GetItem(unsigned int x, unsigned int y);
+    ITEM_ID GetCurrentItem();
     Gears GetGears();
 
     bool IsRoot();
@@ -62,7 +62,7 @@ public:
     static void CallbackRemove(Menu* pMenu);
 
 private:
-    ITEM mInventory[INVENTORY_W * INVENTORY_H];
+    ITEM_ID mInventory[INVENTORY_W * INVENTORY_H];
     unsigned int mInventoryTop;
     unsigned int mX, mY;
     unsigned int mPulldownIndex;
@@ -78,7 +78,7 @@ class UI {
 public:
     UI();
     void Update(OctGame* pOctGame, StatusData& data);
-    void AddItem(ITEM item);
+    void AddItem(ITEM_ID item);
     void OnMenu();
     void OffMenu();
     bool IsMenu();

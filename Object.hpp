@@ -19,7 +19,7 @@ class HandlePool;
 
 struct ObjectListData {
     Object* pObject;
-    std::vector<LinkedNode<LQTData>*> lqtNodes;
+    std::vector<LinkedNode<LQTData>*> lqtNodeNodes;
 };
 
 typedef LinkedList<LQTData> LQTNode;
@@ -123,7 +123,6 @@ protected:
 
     Collider mCollider;
     std::vector<std::vector<uint32_t>> mColliderIndices;
-//    std::vector<Collider> mColliders;
     int mColliderIndex;
     std::string mTag;
     std::queue<ObjectMessage> mMsgQue;

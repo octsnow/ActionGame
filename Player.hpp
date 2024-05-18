@@ -4,7 +4,7 @@
 #include "Item.hpp"
 
 struct Gears {
-    ITEM Hat;
+    ITEM_ID Hat;
 };
 
 class Player : public Object {
@@ -19,20 +19,21 @@ public:
 
     int GetHP();
     int GetCoin();
-    ITEM PopItem();
+    ITEM_ID PopItem();
 
     void SetGears(Gears gears);
 
     bool IsAttacking();
 
     virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;
+    virtual void StayObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;
 private:
     clock_t mAttackCountTime;
     bool mAttackFlag;
     int mHP;
     int mCoin;
     Gears mGears;
-    std::queue<ITEM> mItemQueue;
+    std::queue<ITEM_ID> mItemQueue;
 };
 
 std::vector<LinkedNode<Object*>**> CheckHitObject(Player player, LinkedList<Object*>& objList);

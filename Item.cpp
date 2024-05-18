@@ -15,6 +15,7 @@ namespace {
 
 Item::Item() {
     this->mStartTime = clock();
+    this->SetTag("Item");
 }
 
 void Item::Update(OctGame* pOctGame) {
@@ -22,10 +23,24 @@ void Item::Update(OctGame* pOctGame) {
     time_t elapsedTime = clock() - this->mStartTime;
     pos.y = sin((elapsedTime % (ITEM_MOVE_CYCLE_TIME * 1000) / (double)(ITEM_MOVE_CYCLE_TIME * 1000)) * numbers::pi) * ITEM_MOVE_HEIGHT - ITEM_MOVE_HEIGHT;
     this->SetOffsetPosition(pos.x, pos.y);
+}
 
-    if(clock() - this->mStartTime >= ITEM_LIFE_TIME) {
-        this->SetTag("SlimeHat");
+void Item::StayObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+    if(pTargetObject->CompareTag("Player") && !pTargetHitbox->CompareTag("attack") && this->CanPickup()) {
+        this->PushMessage(ObjectMessage::OBJMSG_DESTROY);
     }
+}
+
+ITEM_ID Item::GetItemID() const {
+    return this->mItemID;
+}
+
+bool Item::CanPickup() const {
+    if(clock() - this->mStartTime >= ITEM_LIFE_TIME) {
+        return true;
+    }
+
+    return false;
 }
 
 void Coin::Init(OctGame* pOctGame) {
@@ -48,9 +63,8 @@ void Coin::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox*
     }
 }
 
-void Hat::Init(OctGame* pOctGame) {
+void SlimeHat::Init(OctGame* pOctGame) {
     Collider collider;
-    this->SetTag("noSlimeHat");
     collider.AddHitBox(0, 0, 50, 50, true);
     this->SetCollider(collider);
     this->SetColliderSet({0});
@@ -58,10 +72,29 @@ void Hat::Init(OctGame* pOctGame) {
     this->SetImageHandle(0, {
         pOctGame->LoadImageFile("images/slimeHat.bmp", 0.5, 0.5, true)});
     this->SetSize(50, 50);
+    this->mItemID = ITEM_ID::HAT_SLIME;
 }
 
-void Hat::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
-    if(pTargetObject->CompareTag("Player") && this->CompareTag("SlimeHat") && !pTargetHitbox->CompareTag("attack")) {
-        this->PushMessage(ObjectMessage::OBJMSG_DESTROY);
-    }
+void SlimeWeapon::Init(OctGame* pOctGame) {
+    Collider collider;
+    collider.AddHitBox(0, 0, 50, 50, true);
+    this->SetCollider(collider);
+    this->SetColliderSet({0});
+    this->SwitchCollider(0);
+    this->SetImageHandle(0, {
+        pOctGame->LoadImageFile("images/slimeHat.bmp", 0.5, 0.5, true)});
+    this->SetSize(50, 50);
+    this->mItemID = ITEM_ID::WEAPON_SLIME;
+}
+
+void FireWeapon::Init(OctGame* pOctGame) {
+    Collider collider;
+    collider.AddHitBox(0, 0, 50, 50, true);
+    this->SetCollider(collider);
+    this->SetColliderSet({0});
+    this->SwitchCollider(0);
+    this->SetImageHandle(0, {
+        pOctGame->LoadImageFile("images/slimeHat.bmp", 0.5, 0.5, true)});
+    this->SetSize(50, 50);
+    this->mItemID = ITEM_ID::WEAPON_FIRE;
 }

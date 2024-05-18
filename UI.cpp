@@ -15,10 +15,10 @@ Menu::Menu() {
     this->Init();
 
     for(int i = 0; i < INVENTORY_W * INVENTORY_H; i++) {
-        this->mInventory[i] = ITEM::HAT_NONE;
+        this->mInventory[i] = ITEM_ID::ITEM_ID_NONE;
     }
 
-    this->mGears.Hat = ITEM::HAT_NONE;
+    this->mGears.Hat = ITEM_ID::ITEM_ID_NONE;
 }
 
 void Menu::Init() {
@@ -62,9 +62,23 @@ void Menu::Update(OctGame* pOctGame) {
             int alY = invLtY + (y * INVENTORY_GRIDSIZE);
             pOctGame->DrawBox(alX, alY, alX + INVENTORY_GRIDSIZE, alY + INVENTORY_GRIDSIZE, 0x000000);
 
-            if(this->GetItem(x, y) != ITEM::HAT_NONE) {
-                pOctGame->DrawBox(alX + 5, alY + 5, alX + INVENTORY_GRIDSIZE - 5, alY + INVENTORY_GRIDSIZE - 5, 0x4FBFDF, true);
+            ITEM_ID itemId = this->GetItem(x, y);
+            if(itemId == ITEM_ID::ITEM_ID_NONE) continue;
+            int color = 0;
+            switch(itemId) {
+                case ITEM_ID::ITEM_ID_NONE:
+                    continue;
+                case ITEM_ID::HAT_SLIME:
+                    color = 0x4FBFDF;
+                    break;
+                case ITEM_ID::WEAPON_SLIME:
+                    color = 0xFF3300;
+                    break;
+                case ITEM_ID::WEAPON_FIRE:
+                    color = 0xFF3300;
+                    break;
             }
+            pOctGame->DrawBox(alX + 5, alY + 5, alX + INVENTORY_GRIDSIZE - 5, alY + INVENTORY_GRIDSIZE - 5, color, true);
         }
     }
 
@@ -110,20 +124,20 @@ void Menu::SetPosition(unsigned int x, unsigned int y) {
     this->mY = y;
 }
 
-void Menu::AddItem(ITEM item) {
-    if(item == ITEM::HAT_NONE) return;
+void Menu::AddItem(ITEM_ID item) {
+    if(item == ITEM_ID::ITEM_ID_NONE) return;
     if(this->mInventoryTop >= INVENTORY_W * INVENTORY_H - 1) return;
 
     this->mInventory[this->mInventoryTop] = item;
     this->mInventoryTop++;
 }
 
-ITEM Menu::GetItem(unsigned int x, unsigned int y) {
-    if(x >= INVENTORY_W || y >= INVENTORY_H) return ITEM::HAT_NONE;
+ITEM_ID Menu::GetItem(unsigned int x, unsigned int y) {
+    if(x >= INVENTORY_W || y >= INVENTORY_H) return ITEM_ID::ITEM_ID_NONE;
     return this->mInventory[y * INVENTORY_W + x];
 }
 
-ITEM Menu::GetCurrentItem() {
+ITEM_ID Menu::GetCurrentItem() {
     return this->GetItem(this->mX, this->mY);
 }
 
@@ -172,7 +186,8 @@ void Menu::Select() {
         this->mPulldownList[this->mPulldownIndex].f(this);
         this->mIsPulldown = false;
     } else {
-        if(this->GetItem(this->mX, this->mY) == ITEM::HAT_NONE) return;
+        if(this->GetItem(this->mX, this->mY) == ITEM_ID::ITEM_ID_NONE) return;
+        this->mPulldownIndex = 0;
         this->mIsPulldown = true;
     }
 }
@@ -183,17 +198,17 @@ void Menu::Cansel() {
 
 void Menu::Equip() {
     // TODO: fix condition
-    ITEM item = this->GetCurrentItem();
-    if(item == ITEM::HAT_SLIMEHAT) {
+    ITEM_ID item = this->GetCurrentItem();
+    if(item == ITEM_ID::HAT_SLIME) {
         this->mGears.Hat = item;
     }
 }
 
 void Menu::Remove() {
     // TODO: fix condition
-    ITEM item = this->GetCurrentItem();
+    ITEM_ID item = this->GetCurrentItem();
     if(item == this->mGears.Hat) {
-        this->mGears.Hat = ITEM::HAT_NONE;
+        this->mGears.Hat = ITEM_ID::ITEM_ID_NONE;
     }
 }
 
@@ -223,7 +238,7 @@ void UI::Update(OctGame* pOctGame, StatusData& data) {
     }
 }
 
-void UI::AddItem(ITEM item) {
+void UI::AddItem(ITEM_ID item) {
     this->mMenu.AddItem(item);
 }
 

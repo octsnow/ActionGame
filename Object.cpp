@@ -2,11 +2,12 @@
 #include <cassert>
 #include <iostream>
 
-#define POW4(x) (1 << ((x) << 1))
-
 using namespace std;
 
 namespace {
+#define POW4(x) (1 << ((x) << 1))
+#define START_INDEX(x) ((POW4(x) - 1) / 3)
+
     uint32_t BitSeparate32(uint32_t x) {
         x = (x | (x << 8)) & 0x00FF00FF;
         x = (x | (x << 4)) & 0x0F0F0F0F;
@@ -54,8 +55,6 @@ namespace {
         assert(targetNode != nullptr);
 
         if(node->GetValue()->pObject == targetNode->GetValue()->pObject) return false;
-        bool result = false;
-
         LQTData* d = node->GetValue();
         LQTData* td = targetNode->GetValue();
         Object* o = d->pObject;
@@ -68,16 +67,20 @@ namespace {
         if(h.isActive && th.isActive && h.IsHitBox(th, o->GetPosition(), to->GetPosition())) {
             if(std::find(d->lastHitBoxes.begin(), d->lastHitBoxes.end(), targetHandle) == d->lastHitBoxes.end()) {
                 o->EnterObject(h, to, &th);
-                to->EnterObject(th, o, &h);
             } else {
                 o->StayObject(h, to, &th);
+            }
+
+            if(std::find(td->lastHitBoxes.begin(), td->lastHitBoxes.end(), handle) == td->lastHitBoxes.end()) {
+                to->EnterObject(th, o, &h);
+            } else {
                 to->StayObject(th, o, &h);
             }
 
-            result = true;
+            return true;
         }
 
-        return result;
+        return false;
     }
 
     void checkHitHitBoxes(LQTNodeNode* node, LQTNode& hitBoxes) {
@@ -100,13 +103,13 @@ namespace {
                     node->GetValue()->newHitBoxes.push_back(tNode->GetValue()->handle);
                     tNode->GetValue()->newHitBoxes.push_back(node->GetValue()->handle);
                 }
-
                 tNode = tNode->mNext;
             }
         });
     }
 
-    void checkHitTree(uint32_t nodeIndex, int depth, const int& maxDepth, vector<int>& checkList, LQTNode* tree) {
+    void checkHitTree(uint32_t morton, int depth, const int& maxDepth, vector<int>& checkList, LQTNode* tree) {
+        uint32_t nodeIndex = START_INDEX(depth) + morton;
         checkHitHitBoxes(tree[nodeIndex]);
 
         if(checkList.size() > 0 && tree[nodeIndex].GetHead() != nullptr) {
@@ -119,8 +122,8 @@ namespace {
 
         checkList.push_back(nodeIndex);
         if(depth < maxDepth) {
-            for(int i = 0; i < 4; i++) {
-                checkHitTree((nodeIndex << 2) + i, depth + 1, maxDepth, checkList, tree);
+            for(uint32_t i = 0; i < 4; i++) {
+                checkHitTree((morton << 2) + i, depth + 1, maxDepth, checkList, tree);
             }
         }
         checkList.pop_back();
@@ -414,7 +417,7 @@ void ObjectList::AppendObject(Object* pObject) {
     auto nodes = this->mHitBoxList.Append(pObject);
     ObjectListData data;
     data.pObject = pObject;
-    data.lqtNodes = nodes;
+    data.lqtNodeNodes = nodes;
     this->mObjectList.Append(data);
 }
 
@@ -435,7 +438,7 @@ void ObjectList::Update(OctGame* pOctGame, Vector2d cameraPos) {
         // reregist LQT
         if(pObject->IsMoved()) {
             vector<LQTNodeNode*> nodes, newNodes;
-            nodes = node->GetValue()->lqtNodes;
+            nodes = node->GetValue()->lqtNodeNodes;
             if(pObject->GetCollider().GetHitBoxes().size() != nodes.size()) {
                 for(LQTNodeNode* v : nodes) {
                     this->mHitBoxList.Remove(v);
@@ -446,7 +449,7 @@ void ObjectList::Update(OctGame* pOctGame, Vector2d cameraPos) {
                 for(LQTNodeNode* v : nodes) {
                     newNodes.push_back(this->mHitBoxList.Reregist(v));
                 }
-                node->GetValue()->lqtNodes = newNodes;
+                node->GetValue()->lqtNodeNodes = newNodes;
                 pObject->SetNotMoved();
             }
         }
@@ -491,7 +494,7 @@ void ObjectList::Update(OctGame* pOctGame, Vector2d cameraPos) {
     });
 
     for(LinkedNode<ObjectListData>* v : destroyObjects) {
-        vector<LQTNodeNode*> nodes = v->GetValue()->lqtNodes;
+        vector<LQTNodeNode*> nodes = v->GetValue()->lqtNodeNodes;
         for(LQTNodeNode* node : nodes) {
             this->mHitBoxList.Remove(node);
         }
@@ -543,8 +546,10 @@ LQTNodeNode* LinearQuaternaryTree::AppendHitBox(Object* pObject, uint32_t hitbox
 
 LQTNodeNode* LinearQuaternaryTree::Reregist(LQTNodeNode* node) {
     if(node == nullptr) return nullptr;
+    auto lastHitBoxes = node->GetValue()->lastHitBoxes;
     LQTNodeNode* newNode = this->AppendHitBox(node->GetValue()->pObject, node->GetValue()->hitboxIndex, node->GetValue()->handle);
     node->GetValue()->pList->Remove(node);
+    newNode->GetValue()->lastHitBoxes = lastHitBoxes;
 
     return newNode;
 }

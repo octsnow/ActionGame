@@ -26,7 +26,7 @@ void Player::Init(OctGame* pOctGame) {
         pOctGame->LoadImageFile("images/player_punch0.bmp", true),
         pOctGame->LoadImageFile("images/player_punch1.bmp", true)});
 
-    attackCollider.AddHitBox(20, 0, 60, 100, true);
+    attackCollider.AddHitBox(20, 0, 60, 100, true, "body");
     attackCollider.AddHitBox(60, 0, 40, 100, false, "attack");
     this->SetCollider(attackCollider);
     this->SetColliderSet({0});
@@ -37,7 +37,7 @@ void Player::Init(OctGame* pOctGame) {
     this->SetTag("Player");
     this->mHP = 100;
     this->mCoin = 0;
-    this->mGears.Hat = ITEM::HAT_NONE;
+    this->mGears.Hat = ITEM_ID::ITEM_ID_NONE;
 }
 
 void Player::Update(OctGame* pOctGame) {
@@ -69,8 +69,6 @@ void Player::Update(OctGame* pOctGame) {
         }
     }
 
-//    this->AddVector(0, this->mGravity);
-
     double vy = this->mVector.y;
     if(vy > MAX_SPEED_Y) {
         this->mVector.y = MAX_SPEED_Y;
@@ -97,7 +95,7 @@ void Player::Attack() {
 }
 
 void Player::Damage() {
-    this->mHP--;
+    this->mHP -= 10;
 }
 
 void Player::Left() {
@@ -123,7 +121,7 @@ void Player::Jump() {
         return;
     }
 
-    this->SetVector(this->GetVector().x, -JUNP_SPEED * (this->mGears.Hat == ITEM::HAT_SLIMEHAT ? 1.5 : 1));
+    this->SetVector(this->GetVector().x, -JUNP_SPEED * (this->mGears.Hat == ITEM_ID::HAT_SLIME ? 1.5 : 1));
 }
 
 int Player::GetHP() {
@@ -134,12 +132,12 @@ int Player::GetCoin() {
     return this->mCoin;
 }
 
-ITEM Player::PopItem() {
+ITEM_ID Player::PopItem() {
     if(this->mItemQueue.empty()) {
-        return ITEM::HAT_NONE;
+        return ITEM_ID::ITEM_ID_NONE;
     }
 
-    ITEM item = this->mItemQueue.front();
+    ITEM_ID item = this->mItemQueue.front();
     this->mItemQueue.pop();
 
     return item;
@@ -158,7 +156,15 @@ void Player::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBo
         this->Damage();
     } else if(pTargetObject->CompareTag("Coin") && !hitbox.CompareTag("attack")) {
         this->mCoin++;
-    } else if(pTargetObject->CompareTag("SlimeHat") && !hitbox.CompareTag("attack")) {
-        this->mItemQueue.push(ITEM::HAT_SLIMEHAT);
+    }
+}
+
+void Player::StayObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+    if(pTargetObject->CompareTag("Item") && !hitbox.CompareTag("attack")) {
+        const Item* item = dynamic_cast<const Item*>(pTargetObject);
+        if(item == nullptr) return;
+        if(!item->CanPickup()) return;
+
+        this->mItemQueue.push(item->GetItemID());
     }
 }
