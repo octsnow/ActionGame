@@ -12,7 +12,9 @@ class Enemy : public Object {
 public:
     virtual void Init(OctGame* pOctGame) override;
     virtual void Draw(OctGame* pOctGame, Camera* pCamera) override;
+    virtual void Drop() {};
     ENEMY_ID GetEnemyID() const;
+
 protected:
     int mHP;
     int mMaxHP;
@@ -23,6 +25,7 @@ class Slime : public Enemy {
 public:
     virtual void Init(OctGame* pOctGame) override;
     virtual void Update(OctGame* pOctGame) override;
+    virtual void Drop() override;
     void Damage();
 
     virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;

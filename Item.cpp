@@ -82,7 +82,7 @@ void SlimeWeapon::Init(OctGame* pOctGame) {
     this->SetColliderSet({0});
     this->SwitchCollider(0);
     this->SetImageHandle(0, {
-        pOctGame->LoadImageFile("images/slimeHat.bmp", 0.5, 0.5, true)});
+        pOctGame->LoadImageFile("images/waterball.bmp", 0.5, 0.5, true)});
     this->SetSize(50, 50);
     this->mItemID = ITEM_ID::WEAPON_SLIME;
 }

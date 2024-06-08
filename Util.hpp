@@ -3,6 +3,12 @@
 #include <queue>
 #include <iostream>
 
+enum class RANDOM_METHOD {
+    RM_MIDDLE_SQUARE,
+    RM_LINEAR_CONGRUENTIAL,
+    RM_LFSR,
+};
+
 class Vector2d {
 public:
     Vector2d() : x(0), y(0) {}
@@ -46,29 +52,6 @@ public:
         }
     }
 
-    /*
-    // copy constructors
-    LinkedList(const LinkedList<T>& other) {
-        if(this->mHead != nullptr) {
-            std::cout << "not null" << std::endl;
-        }
-        this->Clear();
-        LinkedNode<T>* node = other.mHead;
-        while(node != nullptr) {
-            this->Append(*node->GetValue());
-            node = node->mNext;
-        }
-    }
-
-    void operator=(const LinkedList<T>& other) {
-        this->Clear();
-        LinkedNode<T>* node = other.mHead;
-        while(node != nullptr) {
-            this->Append(*node->GetValue());
-            node = node->mNext;
-        }
-    }
-*/
     void Append(T v) {
         if(this->mForeachDoing) {
             this->mAppendQueue.push(v);
@@ -130,21 +113,6 @@ public:
         this->for_each([&](LinkedNode<T>* node) {
             this->Remove(node);
         });
-        /*
-        LinkedNode<T>* node = this->mHead;
-        std::cout << "B" << std::endl;
-        while(node != nullptr) {
-            LinkedNode<T>* nextNode = node->mNext;
-            std::cout << "BA" << std::endl;
-            delete node;
-            std::cout << "BB" << std::endl;
-            node = nextNode;
-        }
-        std::cout << "C" << std::endl;
-
-        this->mHead = nullptr;
-        this->mTail = nullptr;
-        */
         this->mHead = nullptr;
         this->mTail = nullptr;
     }
@@ -184,4 +152,14 @@ private:
     bool mForeachDoing;
     std::queue<T> mAppendQueue;
     std::queue<LinkedNode<T>*> mRemoveQueue;
+};
+
+class Random {
+public:
+    Random(RANDOM_METHOD method, unsigned int seed);
+    unsigned int GetRandom();
+
+private:
+    unsigned int mLastValue;
+    RANDOM_METHOD mMethod;
 };

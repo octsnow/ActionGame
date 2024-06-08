@@ -1,12 +1,14 @@
 #include "OctGame.hpp"
 #include <stdarg.h>
 
+#define KEYARRAY_SIZE 256
+
 using namespace std;
 
 namespace {
-    bool pressedKeys[256];
-    bool upKeys[256];
-    bool downKeys[256];
+    bool pressedKeys[KEYARRAY_SIZE];
+    bool upKeys[KEYARRAY_SIZE];
+    bool downKeys[KEYARRAY_SIZE];
 
     void Key(unsigned char key, int x, int y) {
         if(!pressedKeys[(int)key]) {
@@ -21,8 +23,10 @@ namespace {
     }
 
     void ResetKeys() {
-        memset(upKeys, 0, sizeof(upKeys));
-        memset(downKeys, 0, sizeof(downKeys));
+        for(int i = 0; i < KEYARRAY_SIZE; i++) {
+            upKeys[i] = 0;
+            downKeys[i] = 0;
+        }
     }
 
     int Clamp(int n, int min, int max) {

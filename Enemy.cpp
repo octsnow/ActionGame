@@ -1,6 +1,8 @@
 #include "Enemy.hpp"
 #include "Item.hpp"
+#include "Util.hpp"
 #include <iostream>
+#include <time.h>
 
 using namespace std;
 
@@ -8,6 +10,20 @@ using namespace std;
 #define X_SPEED 1
 #define HP_OFFSET_Y 20
 #define HP_H 10
+#define MAX_RANDOM_RATE 100
+#define SLIME_LOST_RATE 30
+
+namespace {
+    Random random(RANDOM_METHOD::RM_LFSR, time(NULL));
+
+    bool isHappend(int rate) {
+        unsigned int r = random.GetRandom() % MAX_RANDOM_RATE;
+
+        cout << r << endl;
+
+        return r < rate;
+    }
+}
 
 void Enemy::Init(OctGame* pOctGame) {
     this->SetTag("Enemy");
@@ -75,15 +91,21 @@ void Slime::Update(OctGame* pOctGame) {
     }
 }
 
+void Slime::Drop() {
+    SlimeHat* hat = new SlimeHat();
+    hat->SetPosition(this->GetPosition().x, this->GetPosition().y);
+    hat->SetGravity(this->mGravity);
+    this->PushObject(hat);
+}
+
 void Slime::Damage() {
     if(this->mHP > 0) {
         this->mHP-=10;
         if(this->mHP <= 0) {
             this->PushMessage(ObjectMessage::OBJMSG_DESTROY);
-            SlimeHat* hat = new SlimeHat();
-            hat->SetPosition(this->GetPosition().x, this->GetPosition().y);
-            hat->SetGravity(this->mGravity);
-            this->PushObject(hat);
+            if(isHappend(SLIME_LOST_RATE)) {
+                this->Drop();
+            }
         }
     }
 }
