@@ -38,6 +38,7 @@ namespace {
     ObjectList g_object_list(g_stage.GetWidth() * BLOCK_SIZE, g_stage.GetHeight() * BLOCK_SIZE);
     Player* g_pplayer;
     UI g_ui;
+    bool koma_mode = false;
 
     void Update() {
         Camera camera(g_stage.GetWidth(), g_stage.GetHeight(), BLOCK_SIZE, SCREEN_W);

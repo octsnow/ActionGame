@@ -358,7 +358,6 @@ void Object::TurnOther() {
 }
 
 void Object::UpdatePosition() {
-    this->mLastPosition = this->mPosition;
     this->Translate(this->mVector.x, this->mVector.y);
 
     /*
@@ -378,6 +377,10 @@ void Object::UpdatePosition() {
         this->mVector.y = new_vec_y < 0 ? new_vec_y : 0;
     }
     */
+}
+
+void Object::UpdateLastPosition() {
+    this->mLastPosition = this->mPosition;
 }
 
 void Object::SetIsGround(bool flag) {
@@ -529,19 +532,27 @@ void ObjectList::Update(OctGame* pOctGame, Camera* pCamera) {
             pObject->EnterObject(pOctGame, hi.hitbox, hi.target_object, &hi.target_hitbox);
         }
         for(HITINFO hi : pObject->stays) {
-            if(hi.hitbox.isPhysics && hi.target_hitbox.isPhysics && pObject->GetWeight() < hi.target_object->GetWeight()) {
-                Vector2d vec, new_vec, pos, last_pos, target_pos, target_last_pos, hitbox_pos, target_hitbox_pos;
-                vec = pObject->GetVector();
-                pos = pObject->GetPosition();
-                last_pos = pObject->GetLastPosition();
-                target_pos = hi.target_object->GetPosition();
-                target_last_pos = hi.target_object->GetLastPosition();
-                hitbox_pos = {
-                    pos.x + hi.hitbox.pos.x,
-                    pos.y + hi.hitbox.pos.y};
-                target_hitbox_pos = {
-                    target_pos.x + hi.target_hitbox.pos.x,
-                    target_pos.y + hi.target_hitbox.pos.y};
+            if(hi.hitbox.isPhysics
+            && hi.target_hitbox.isPhysics
+            && pObject->GetWeight() < hi.target_object->GetWeight()
+            && hi.hitbox.IsHitBox(hi.target_hitbox, pObject->GetPosition(), hi.target_object->GetPosition())) {
+                Vector2d vec = pObject->GetVector(),
+                         pos = pObject->GetPosition(),
+                         last_pos = pObject->GetLastPosition(),
+                         target_pos = hi.target_object->GetPosition(),
+                         target_last_pos = hi.target_object->GetLastPosition(),
+                         hitbox_pos = {
+                            pos.x + hi.hitbox.pos.x,
+                            pos.y + hi.hitbox.pos.y},
+                         hitbox_last_pos = {
+                            last_pos.x + hi.hitbox.pos.x,
+                            last_pos.y + hi.hitbox.pos.y},
+                         target_hitbox_pos = {
+                            target_pos.x + hi.target_hitbox.pos.x,
+                            target_pos.y + hi.target_hitbox.pos.y},
+                         target_hitbox_last_pos = {
+                            target_last_pos.x + hi.target_hitbox.pos.x,
+                            target_last_pos.y + hi.target_hitbox.pos.y};
 
                 double dx = pos.x - last_pos.x;
                 double dy = pos.y - last_pos.y;
@@ -552,6 +563,101 @@ void ObjectList::Update(OctGame* pOctGame, Camera* pCamera) {
                 double abs_dtx = abs(dtx);
                 double abs_dty = abs(dty);
 
+                printf("tag: %s\n", pObject->GetTag().c_str());
+                printf("last pos   (%lf, %lf)\n", last_pos.x, last_pos.y);
+                printf("     pos   (%lf, %lf)\n", pos.x, pos.y);
+                printf("hitbox pos (%lf, %lf)\n", hitbox_pos.x, hitbox_pos.y);
+                printf("hitbox size (%d, %d)\n", hi.hitbox.width, hi.hitbox.height);
+                printf("target:\n");
+                printf("last pos   (%lf, %lf)\n", target_last_pos.x, target_last_pos.y);
+                printf("     pos   (%lf, %lf)\n", target_pos.x, target_pos.y);
+                printf("hitbox pos (%lf, %lf)\n", target_hitbox_pos.x, target_hitbox_pos.y);
+                printf("hitbox size (%d, %d)\n", hi.target_hitbox.width, hi.target_hitbox.height);
+                printf("\n");
+
+                double hitbox_last_right_x = hitbox_last_pos.x + hi.hitbox.width - 1;
+                double hitbox_last_bottom_y = hitbox_last_pos.y + hi.hitbox.height - 1;
+                double target_hitbox_last_right_x = target_hitbox_last_pos.x + hi.target_hitbox.width - 1;
+                double target_hitbox_last_bottom_y = target_hitbox_last_pos.y + hi.target_hitbox.height - 1;
+
+                double left, right, over, under;
+
+                if(hitbox_last_pos.x < target_hitbox_last_pos.x) {
+                    left = hitbox_last_pos.x;
+                    right = target_hitbox_last_pos.x + hi.target_hitbox.width;
+                } else {
+                    left = target_hitbox_last_pos.x;
+                    right = hitbox_last_pos.x + hi.hitbox.width;
+                }
+
+                if(hitbox_last_pos.y < target_hitbox_last_pos.y) {
+                    over = hitbox_last_pos.y;
+                    under = target_hitbox_last_pos.y + hi.target_hitbox.height;
+                } else {
+                    over = target_hitbox_last_pos.y;
+                    under = hitbox_last_pos.y + hi.hitbox.height;
+                }
+
+                Vector2d new_vec;
+                /*
+                if((target_last_pos.x <= hitbox_last_pos.x && hitbox_last_pos.x < target_last_pos.x + hi.target_hitbox.width)
+                || (target_last_pos.x <= hitbox_last_right_x && hitbox_last_right_x < target_last_pos.x + hi.target_hitbox.width)
+                || (last_pos.x <= target_hitbox_last_pos.x && target_hitbox_last_pos.x < last_pos.x + hi.hitbox.width)
+                || (last_pos.x <= target_hitbox_last_right_x && target_hitbox_last_right_x < last_pos.x + hi.hitbox.width)) {
+                */
+                if(right - left < hi.hitbox.width + hi.target_hitbox.width) {
+                    if(dy > 0) {
+                        printf("***********************************<up>**********************************************************\n");
+                        new_vec.y = -((hitbox_pos.y + hi.hitbox.height) - target_hitbox_pos.y);
+                        pObject->SetIsGround(true);
+                    } else {
+                        printf("***********************************<down>**********************************************************\n");
+                        new_vec.y = target_hitbox_pos.y + hi.target_hitbox.height - hitbox_pos.y;
+                    }
+                }
+
+                /*
+                if((target_last_pos.y <= hitbox_last_pos.y && hitbox_last_pos.y < target_last_pos.y + hi.target_hitbox.height)
+                || (target_last_pos.y <= hitbox_last_bottom_y && hitbox_last_bottom_y < target_last_pos.y + hi.target_hitbox.height)
+                || (last_pos.y <= target_hitbox_last_pos.y && target_hitbox_last_pos.y < last_pos.y + hi.hitbox.height)
+                || (last_pos.y <= target_hitbox_last_bottom_y && target_hitbox_last_bottom_y < last_pos.y + hi.hitbox.height)) {
+                */
+                if(under - over < hi.hitbox.height + hi.target_hitbox.height) {
+                    if(dx > 0) {
+                        printf("***********************************<left>**********************************************************\n");
+                        new_vec.x = -((hitbox_pos.x + hi.hitbox.width) - target_hitbox_pos.x);
+                        pObject->SetIsWall(true);
+                    } else {
+                        printf("***********************************<right>**********************************************************\n");
+                        new_vec.x = target_hitbox_pos.x + hi.target_hitbox.width - hitbox_pos.x;
+                        pObject->SetIsWall(true);
+                    }
+                }
+
+                if(new_vec.x == 0 && new_vec.y == 0) {
+                    if(abs_dtx > abs_dty) {
+                        if(dtx > 0) {
+                            new_vec.x = target_hitbox_pos.x + hi.target_hitbox.width - hitbox_pos.x;
+                            pObject->SetIsWall(true);
+                        } else {
+                            new_vec.x = -((hitbox_pos.x + hi.hitbox.width) - target_hitbox_pos.x);
+                            pObject->SetIsWall(true);
+                        }
+                    } else if(abs_dty > abs_dtx) {
+                        if(dty > 0) {
+                            new_vec.y = target_hitbox_pos.y + hi.target_hitbox.height - hitbox_pos.y;
+                        } else {
+                            new_vec.y = -((hitbox_pos.y + hi.hitbox.height) - target_hitbox_pos.y);
+                            pObject->SetIsGround(true);
+                        }
+                    }
+                    else {
+                        new_vec.x = -((hitbox_pos.x + hi.hitbox.width) - target_hitbox_pos.x);
+                        pObject->SetIsWall(true);
+                    }
+                }
+
+                /*
                 if(abs_dx > abs_dy) {
                     if(dx > 0) {
                         new_vec.x = -((hitbox_pos.x + hi.hitbox.width - 1) - target_hitbox_pos.x + 1);
@@ -585,8 +691,14 @@ void ObjectList::Update(OctGame* pOctGame, Camera* pCamera) {
                         }
                     }
                 }
+                */
+
+                printf("new_vec (%lf, %lf)\n\n", new_vec.x, new_vec.y);
 
                 pObject->Translate(new_vec.x, new_vec.y);
+                pObject->SetVector(
+                    pObject->IsWall() ? 0 : vec.x,
+                    pObject->IsGround() ? 0 : vec.y);
             }
 
             pObject->StayObject(pOctGame, hi.hitbox, hi.target_object, &hi.target_hitbox);
@@ -595,7 +707,7 @@ void ObjectList::Update(OctGame* pOctGame, Camera* pCamera) {
 
     this->mObjectList.for_each([&](LinkedNode<ObjectListData>* node) {
         Object* pObject = node->GetValue()->pObject;
-        //pObject->UpdatePosition();
+        pObject->UpdateLastPosition();
         pObject->Draw(pOctGame, pCamera);
         pObject->Update(pOctGame);
     });

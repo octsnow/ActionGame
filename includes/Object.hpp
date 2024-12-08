@@ -81,6 +81,7 @@ public:
     void TurnOther();
 
     void UpdatePosition();
+    void UpdateLastPosition();
 
     void SetIsGround(bool flag);
     void SetIsWall(bool flag);
