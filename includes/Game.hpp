@@ -1,16 +1,5 @@
 #pragma once
 
-#include "OctGame/OctGame.hpp"
-#include "Util.hpp"
-#include "Object.hpp"
-#include "Item.hpp"
-#include "Player.hpp"
-#include "Enemy.hpp"
-#include "Stage.hpp"
-#include "Character.hpp"
-#include "UI.hpp"
-#include "Camera.hpp"
-
 enum class Tag {
     Player = 1,
     Enemy,

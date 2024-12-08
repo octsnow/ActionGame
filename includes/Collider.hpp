@@ -6,6 +6,7 @@
 
 class HitBox {
 public:
+    HitBox();
     HitBox(double x, double y, int width, int height, bool isPhysics, std::string tag);
     HitBox(Vector2d pos, int width, int height, bool isPhysics, std::string tag);
     bool IsHitBox(const HitBox target, const Vector2d pos, const Vector2d targetPos) const;

@@ -1,8 +1,9 @@
 #include "Object.hpp"
 #include <cassert>
-#include <iostream>
 
 using namespace std;
+
+#define AIR_RESISTANCE 0.5
 
 namespace {
 #define POW4(x) (1 << ((x) << 1))
@@ -65,16 +66,30 @@ namespace {
         HitBoxHandle targetHandle = td->handle;
 
         if(h.isActive && th.isActive && h.IsHitBox(th, o->GetPosition(), to->GetPosition())) {
+            HITINFO hi;
+
+            hi.hitbox = h;
+            hi.target_object = to;
+            hi.target_hitbox = th;
+            o->stays.push_back(hi);
+
+            hi.hitbox = th;
+            hi.target_object = o;
+            hi.target_hitbox = h;
+            to->stays.push_back(hi);
+
             if(std::find(d->lastHitBoxes.begin(), d->lastHitBoxes.end(), targetHandle) == d->lastHitBoxes.end()) {
-                o->EnterObject(h, to, &th);
-            } else {
-                o->StayObject(h, to, &th);
+                hi.hitbox = h;
+                hi.target_object = to;
+                hi.target_hitbox = th;
+                o->enters.push_back(hi);
             }
 
             if(std::find(td->lastHitBoxes.begin(), td->lastHitBoxes.end(), handle) == td->lastHitBoxes.end()) {
-                to->EnterObject(th, o, &h);
-            } else {
-                to->StayObject(th, o, &h);
+                hi.hitbox = th;
+                hi.target_object = o;
+                hi.target_hitbox = h;
+                to->enters.push_back(hi);
             }
 
             return true;
@@ -135,13 +150,41 @@ namespace {
     }
 }
 
-Object::Object() {
-    this->InitParams();
+Object::Object()
+: mAnimNum(0)
+, mAnimIndex(0)
+, mLastAnimNum(0)
+, mLastTime(clock())
+, mWidth(0)
+, mHeight(0)
+, mPosition(0, 0)
+, mOffsetPosition(0, 0)
+, mVector(0, 0)
+, mIsLeft(false)
+, mColliderIndex(0)
+, mIsMoved(false)
+, mGravity(0)
+, mWeight(1) {
+    //this->InitParams();
     this->SetTag("");
 }
 
-Object::Object(std::string tag) {
-    this->InitParams();
+Object::Object(std::string tag)
+: mAnimNum(0)
+, mAnimIndex(0)
+, mLastAnimNum(0)
+, mLastTime(clock())
+, mWidth(0)
+, mHeight(0)
+, mPosition(0, 0)
+, mOffsetPosition(0, 0)
+, mVector(0, 0)
+, mIsLeft(false)
+, mColliderIndex(0)
+, mIsMoved(false)
+, mGravity(0)
+, mWeight(1) {
+    //this->InitParams();
     this->SetTag(tag);
 }
 
@@ -260,6 +303,10 @@ Vector2d Object::GetPosition() const {
     return this->mPosition;
 }
 
+Vector2d Object::GetLastPosition() const {
+    return this->mLastPosition;
+}
+
 Vector2d Object::GetOffsetPosition() const {
     return this->mOffsetPosition;
 }
@@ -269,13 +316,33 @@ void Object::SetVector(double x, double y) {
     this->mVector.y = y;
 }
 
+void Object::SetVector(Vector2d vector) {
+    this->SetVector(vector.x, vector.y);
+}
+
 void Object::AddVector(double x, double y) {
     this->mVector.x += x;
     this->mVector.y += y;
 }
 
+void Object::AddVector(Vector2d vector) {
+    this->AddVector(vector.x, vector.y);
+}
+
 Vector2d Object::GetVector() const {
     return this->mVector;
+}
+
+void Object::SetWeight(double weight) {
+    if(weight < 0) {
+        return;
+    }
+
+    this->mWeight = weight;
+}
+
+double Object::GetWeight() {
+    return this->mWeight;
 }
 
 void Object::TurnLeft() {
@@ -291,7 +358,26 @@ void Object::TurnOther() {
 }
 
 void Object::UpdatePosition() {
+    this->mLastPosition = this->mPosition;
     this->Translate(this->mVector.x, this->mVector.y);
+
+    /*
+    if(this->mVector.x > 0) {
+        double new_vec_x = this->mVector.x - AIR_RESISTANCE;
+        this->mVector.x = new_vec_x > 0 ? new_vec_x : 0;
+    } else if(this->mVector.x < 0) {
+        double new_vec_x = this->mVector.x + AIR_RESISTANCE;
+        this->mVector.x = new_vec_x < 0 ? new_vec_x : 0;
+    }
+
+    if(this->mVector.y > 0 && this->mGravity <= 0) {
+        double new_vec_y = this->mVector.y - AIR_RESISTANCE;
+        this->mVector.y = new_vec_y > 0 ? new_vec_y : 0;
+    } else if(this->mVector.y < 0 && this->mGravity >= 0) {
+        double new_vec_y = this->mVector.y + AIR_RESISTANCE;
+        this->mVector.y = new_vec_y < 0 ? new_vec_y : 0;
+    }
+    */
 }
 
 void Object::SetIsGround(bool flag) {
@@ -328,6 +414,10 @@ void Object::AddGravity() {
 
 void Object::SetTag(string tag) {
     this->mTag = tag;
+}
+
+string Object::GetTag() const {
+    return this->mTag;
 }
 
 bool Object::CompareTag(string tag) const{
@@ -406,6 +496,7 @@ void Object::InitParams() {
     this->mIsLeft = false;
     this->mColliderIndex = 0;
     this->mIsMoved = false;
+    this->mWeight = 1;
 }
 
 ObjectList::ObjectList(unsigned int worldWidth, unsigned int worldHeight)
@@ -425,10 +516,86 @@ void ObjectList::CheckHitObjects() const {
 }
 
 void ObjectList::Update(OctGame* pOctGame, Camera* pCamera) {
-    this->CheckHitObjects();
     this->mObjectList.for_each([&](LinkedNode<ObjectListData>* node) {
         Object* pObject = node->GetValue()->pObject;
         pObject->UpdatePosition();
+        pObject->enters.clear();
+        pObject->stays.clear();
+    });
+    this->CheckHitObjects();
+    this->mObjectList.for_each([&](LinkedNode<ObjectListData>* node) {
+        Object* pObject = node->GetValue()->pObject;
+        for(HITINFO hi : pObject->enters) {
+            pObject->EnterObject(pOctGame, hi.hitbox, hi.target_object, &hi.target_hitbox);
+        }
+        for(HITINFO hi : pObject->stays) {
+            if(hi.hitbox.isPhysics && hi.target_hitbox.isPhysics && pObject->GetWeight() < hi.target_object->GetWeight()) {
+                Vector2d vec, new_vec, pos, last_pos, target_pos, target_last_pos, hitbox_pos, target_hitbox_pos;
+                vec = pObject->GetVector();
+                pos = pObject->GetPosition();
+                last_pos = pObject->GetLastPosition();
+                target_pos = hi.target_object->GetPosition();
+                target_last_pos = hi.target_object->GetLastPosition();
+                hitbox_pos = {
+                    pos.x + hi.hitbox.pos.x,
+                    pos.y + hi.hitbox.pos.y};
+                target_hitbox_pos = {
+                    target_pos.x + hi.target_hitbox.pos.x,
+                    target_pos.y + hi.target_hitbox.pos.y};
+
+                double dx = pos.x - last_pos.x;
+                double dy = pos.y - last_pos.y;
+                double dtx = target_pos.x - target_last_pos.x;
+                double dty = target_pos.y - target_last_pos.y;
+                double abs_dx = abs(dx);
+                double abs_dy = abs(dy);
+                double abs_dtx = abs(dtx);
+                double abs_dty = abs(dty);
+
+                if(abs_dx > abs_dy) {
+                    if(dx > 0) {
+                        new_vec.x = -((hitbox_pos.x + hi.hitbox.width - 1) - target_hitbox_pos.x + 1);
+                        pObject->SetIsWall(true);
+                    } else {
+                        new_vec.x = target_hitbox_pos.x + hi.target_hitbox.width - hitbox_pos.x - 1 + 1;
+                        pObject->SetIsWall(true);
+                    }
+                } else if(abs_dy > abs_dx) {
+                    if(dy > 0) {
+                        new_vec.y = -((hitbox_pos.y + hi.hitbox.height - 1) - target_hitbox_pos.y + 1);
+                        pObject->SetIsGround(true);
+                    } else {
+                        new_vec.y = target_hitbox_pos.y + hi.target_hitbox.height - hitbox_pos.y - 1 + 1;
+                    }
+                } else {
+                    if(abs_dtx > abs_dty) {
+                        if(dtx > 0) {
+                            new_vec.x = target_hitbox_pos.x + hi.target_hitbox.width - hitbox_pos.x - 1 + 1;
+                            pObject->SetIsWall(true);
+                        } else {
+                            new_vec.x = -((hitbox_pos.x + hi.hitbox.width - 1) - target_hitbox_pos.x + 1);
+                            pObject->SetIsWall(true);
+                        }
+                    } else if(abs_dty > abs_dtx) {
+                        if(dty > 0) {
+                            new_vec.y = target_hitbox_pos.y + hi.target_hitbox.height - hitbox_pos.y - 1 + 1;
+                        } else {
+                            new_vec.y = -((hitbox_pos.y + hi.hitbox.height - 1) - target_hitbox_pos.y + 1);
+                            pObject->SetIsGround(true);
+                        }
+                    }
+                }
+
+                pObject->Translate(new_vec.x, new_vec.y);
+            }
+
+            pObject->StayObject(pOctGame, hi.hitbox, hi.target_object, &hi.target_hitbox);
+        }
+    });
+
+    this->mObjectList.for_each([&](LinkedNode<ObjectListData>* node) {
+        Object* pObject = node->GetValue()->pObject;
+        //pObject->UpdatePosition();
         pObject->Draw(pOctGame, pCamera);
         pObject->Update(pOctGame);
     });

@@ -1,7 +1,45 @@
 #include "Stage.hpp"
+#include <fstream>
+
+#define BLOCK_STONE 1
+#define BLOCK_SOIL 2
+
+using namespace std;
 
 namespace {
+    int g_ihandle_block_soil;
+    int g_ihandle_block_stone;
 };
+
+void Stage::LoadStage(OctGame* pOctGame, const string filepath, int blockSize) {
+    g_ihandle_block_soil = pOctGame->LoadImageFile("assets/images/blocks/soil.bmp", true);
+    g_ihandle_block_stone = pOctGame->LoadImageFile("assets/images/blocks/stone.bmp", true);
+
+    ifstream ifs(filepath);
+
+    if(!ifs) {
+        cerr << "error: failed to load stage file" << filepath << endl;
+        return;
+    }
+
+    uint8_t width, height;
+    ifs.read((char*)&width, sizeof(uint8_t));
+    ifs.read((char*)&height, sizeof(uint8_t));
+
+    this->mStageWidth = static_cast<int>(width);
+    this->mStageHeight = static_cast<int>(height);
+    this->mBlockSize = blockSize;
+
+    this->mStage.resize(this->mStageWidth * this->mStageHeight);
+
+    uint8_t* stage = new uint8_t[this->mStageWidth * this->mStageHeight];
+    ifs.read((char*)stage, sizeof(uint8_t) * this->mStageWidth * this->mStageHeight);
+    for(int i = 0; i < width * height; i++) {
+        this->mStage[i] = static_cast<int>(stage[i]);
+    }
+
+    delete[] stage;
+}
 
 void Stage::SetStage(const int* stage, int width, int height, int blockSize) {
     this->mStage.resize(width * height);
@@ -17,6 +55,14 @@ void Stage::SetStage(const int* stage, int width, int height, int blockSize) {
 void Stage::SetScreenSize(int width, int height) {
     this->mScreenWidth = width;
     this->mScreenHeight = height;
+}
+
+int Stage::GetWidth() {
+    return this->mStageWidth;
+}
+
+int Stage::GetHeight() {
+    return this->mStageHeight;
 }
 
 CollisionType Stage::GetColType(int blockNum) {
@@ -135,13 +181,19 @@ void Stage::CheckHitBlock(ObjectList& objectList) {
 
         newVec = this->AdjustVector(pObject);
 
-        pObject->SetVector(newVec.x, newVec.y);
-        pObject->SetIsGround(vec.y > newVec.y);
-        pObject->SetIsWall(abs(vec.x) > abs(newVec.x));
+        bool hitGround = vec.y > newVec.y;
+        bool hitWall = (vec.x * newVec.x > 0 && abs(vec.x) > abs(newVec.x)) || vec.x * newVec.x < 0;
+
+        //pObject->SetVector(newVec.x, newVec.y);
+        pObject->Translate(newVec.x, newVec.y);
+        pObject->SetVector(hitWall ? 0 : vec.x, hitGround ? 0 : vec.y);
+
+        pObject->SetIsGround(hitGround);
+        pObject->SetIsWall(hitWall);
     });
 }
 
-void Stage::Draw(OctGame* game, Camera* pCamera) {
+void Stage::Draw(OctGame* pOctGame, Camera* pCamera) {
     for(int y = 0; y < this->mScreenHeight && y < this->mScreenHeight / this->mBlockSize + 1; y++){
         for(int x = 0; x < this->mStageWidth && x < this->mScreenWidth / this->mBlockSize + 1; x++){
             Vector2d cameraPos = pCamera->GetPosition();
@@ -153,12 +205,13 @@ void Stage::Draw(OctGame* game, Camera* pCamera) {
 
             if(idx < 0 || this->mStageWidth * this->mStageHeight <= idx) continue;
             switch(this->mStage[idx]){
-            case 1:
-//                game->drawImage(gGlassBlock, x1, y1);
-                game->DrawBox(x1, y1, x2, y2, 0x00FFFF, true);
+            case BLOCK_SOIL:
+                pOctGame->DrawImage(g_ihandle_block_soil, x1, y1);
+//                pOctGame->DrawBox(x1, y1, x2, y2, 0x00FFFF, true);
                 break;
-            case 2:
-                game->DrawBox(x1, y1, x2, y2, 0xFFFF00, true);
+            case BLOCK_STONE:
+                pOctGame->DrawImage(g_ihandle_block_stone, x1, y1);
+//                pOctGame->DrawBox(x1, y1, x2, y2, 0xFFFF00, true);
                 break;
             }
         }

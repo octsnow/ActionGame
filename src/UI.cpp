@@ -1,10 +1,9 @@
 #include "UI.hpp"
-#include <iostream>
 
 using namespace std;
 
 void Status::Update(OctGame* pOctGame, StatusData& data) {
-    pOctGame->Text(0, 0, RGB(0xFF, 0xFF, 0xFF), "coin: %d", data.coin);
+    pOctGame->DrawText(0, 0, RGB(0xFF, 0xFF, 0xFF), "coin: %d", data.coin);
     if(data.hp > 0) {
         pOctGame->DrawBox(100, 0, 100 + data.hp, 30, 0x00FF00, true);
     }
@@ -31,6 +30,9 @@ void Menu::Init() {
 void Menu::Update(OctGame* pOctGame) {
     if(pOctGame == nullptr) return;
 
+    int x = this->mX;
+    int y = this->mY;
+
     // key
     if(pOctGame->IsDown('a')) {
         this->Left();
@@ -49,6 +51,10 @@ void Menu::Update(OctGame* pOctGame) {
     }
     if(pOctGame->IsDown(KEY_ESC)) {
         this->Cansel();
+    }
+
+    if(this->mX != x || this->mY != y) {
+        pOctGame->audio.Play("Cursor");
     }
 
     // draw
@@ -108,7 +114,7 @@ void Menu::Update(OctGame* pOctGame) {
             alY + 20 + (INVENTORY_PULLDOWN_ELEM_H * this->mPulldownIndex),
             0x888888, true);
         for(int i = 0; i < this->mPulldownList.size(); i++) {
-            pOctGame->Text(
+            pOctGame->DrawText(
                 30 + alX, alY + (INVENTORY_PULLDOWN_ELEM_H * i),
                 15, RGB(0x00, 0x00, 0x00),
                 this->mPulldownList[i].name.c_str());

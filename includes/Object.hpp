@@ -6,7 +6,7 @@
 #include <vector>
 #include <tuple>
 
-#include "OctGame/OctGame.hpp"
+#include "OctGame.hpp"
 #include "Camera.hpp"
 #include "Collider.hpp"
 
@@ -23,6 +23,13 @@ struct ObjectListData {
     std::vector<LinkedNode<LQTData>*> lqtNodeNodes;
 };
 
+// TODO:
+typedef struct hit_info_tag {
+    HitBox hitbox;
+    Object* target_object;
+    HitBox target_hitbox;
+} HITINFO;
+
 typedef LinkedList<LQTData> LQTNode;
 typedef LinkedNode<LQTData> LQTNodeNode;
 
@@ -30,6 +37,7 @@ enum ObjectMessage {
     OBJMSG_DESTROY,
     OBJMSG_NONE
 };
+
 
 class Object {
 public:
@@ -55,12 +63,18 @@ public:
     void SetPosition(double x, double y);
     void SetOffsetPosition(double x, double y);
     Vector2d GetPosition() const;
+    Vector2d GetLastPosition() const;
     Vector2d GetOffsetPosition() const;
     void Translate(double x, double y);
 
     void SetVector(double x, double y);
+    void SetVector(Vector2d vector);
     Vector2d GetVector() const;
     void AddVector(double x, double y);
+    void AddVector(Vector2d vector);
+
+    void SetWeight(double weight);
+    double GetWeight();
 
     void TurnLeft();
     void TurnRight();
@@ -79,6 +93,7 @@ public:
     void AddGravity();
 
     void SetTag(std::string tag);
+    std::string GetTag() const;
     bool CompareTag(std::string tag) const;
 
     // Message Queue
@@ -94,8 +109,12 @@ public:
     virtual void Draw(OctGame* pOctGame, Camera* pCamera);
 
     // event call backs
-    virtual void EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {};
-    virtual void StayObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {};
+    virtual void EnterObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {};
+    virtual void StayObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {};
+
+    // TODO:
+    std::vector<HITINFO> enters;
+    std::vector<HITINFO> stays;
 
 protected:
     // Methods
@@ -114,9 +133,11 @@ protected:
     int mWidth;
     int mHeight;
     Vector2d mPosition;
+    Vector2d mLastPosition;
     Vector2d mOffsetPosition;
     Vector2d mVector;
     bool mIsLeft;
+    double mWeight;
 
     double mGravity;
     bool mIsGround;
@@ -128,6 +149,8 @@ protected:
     std::string mTag;
     std::queue<ObjectMessage> mMsgQue;
     std::queue<Object*> mObjectQue;
+
+    LinkedList<std::string> mIgnoreTags;
 
     bool mIsMoved;
 };

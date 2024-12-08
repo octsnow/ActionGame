@@ -1,4 +1,5 @@
 #include "Enemy.hpp"
+
 #include "Item.hpp"
 #include "Util.hpp"
 #include <iostream>
@@ -11,7 +12,7 @@ using namespace std;
 #define HP_OFFSET_Y 20
 #define HP_H 10
 #define MAX_RANDOM_RATE 100
-#define SLIME_LOST_RATE 30
+#define SLIME_DROP_RATE 100
 
 namespace {
     Random random(RANDOM_METHOD::RM_LFSR, time(NULL));
@@ -28,6 +29,7 @@ namespace {
 void Enemy::Init(OctGame* pOctGame) {
     this->SetTag("Enemy");
     this->TurnRight();
+    this->SetWeight(2);
 }
 
 void Enemy::Draw(OctGame* pOctGame, Camera* pCamera) {
@@ -49,6 +51,13 @@ void Enemy::Draw(OctGame* pOctGame, Camera* pCamera) {
     );
 }
 
+void Enemy::Term(OctGame* pOctGame) {
+}
+
+void Enemy::Damage(OctGame* pOctGame) {
+    pOctGame->audio.Play("Damage");
+}
+
 ENEMY_ID Enemy::GetEnemyID() const {
     return this->mEnemyID;
 }
@@ -56,10 +65,10 @@ ENEMY_ID Enemy::GetEnemyID() const {
 void Slime::Init(OctGame* pOctGame) {
     Enemy::Init(pOctGame);
     Collider collider;
-    this->SetImageHandle(0, {
-        pOctGame->LoadImageFile("images/slime.bmp", true)});
+    this->SetImageHandle(300, {
+        pOctGame->LoadImageFile("assets/images/slime0.bmp", true),
+        pOctGame->LoadImageFile("assets/images/slime1.bmp", true)});
     this->SetSize(50, 50);
-    this->SetPosition(30, 0);
 
     collider.AddHitBox(1, 0, 50, 50, true);
     this->SetCollider(collider);
@@ -91,28 +100,29 @@ void Slime::Update(OctGame* pOctGame) {
     }
 }
 
-void Slime::Drop() {
+void Slime::Drop(OctGame* pOctGame) {
     SlimeHat* hat = new SlimeHat();
     hat->SetPosition(this->GetPosition().x, this->GetPosition().y);
     hat->SetGravity(this->mGravity);
     this->PushObject(hat);
 }
 
-void Slime::Damage() {
+void Slime::Damage(OctGame* pOctGame) {
+    Enemy::Damage(pOctGame);
     if(this->mHP > 0) {
         this->mHP-=10;
         if(this->mHP <= 0) {
             this->PushMessage(ObjectMessage::OBJMSG_DESTROY);
-            if(isHappend(SLIME_LOST_RATE)) {
-                this->Drop();
+            if(isHappend(SLIME_DROP_RATE)) {
+                this->Drop(pOctGame);
             }
         }
     }
 }
 
-void Slime::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+void Slime::EnterObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
     if(pTargetObject->CompareTag("Player") && pTargetHitbox->CompareTag("attack")) {
-        this->Damage();
+        this->Damage(pOctGame);
     }
 }
 
@@ -120,9 +130,8 @@ void Fire::Init(OctGame* pOctGame) {
     Enemy::Init(pOctGame);
     Collider collider;
     this->SetImageHandle(0, {
-        pOctGame->LoadImageFile("images/slime.bmp", true)});
+        pOctGame->LoadImageFile("assets/images/slime.bmp", true)});
     this->SetSize(50, 50);
-    this->SetPosition(70, 0);
 
     collider.AddHitBox(1, 0, 50, 50, true);
     this->SetCollider(collider);
@@ -160,7 +169,8 @@ void Fire::Draw(OctGame* pOctGame, Camera* pCamera) {
     Enemy::Draw(pOctGame, pCamera);
 }
 
-void Fire::Damage() {
+void Fire::Damage(OctGame* pOctGame) {
+    Enemy::Damage(pOctGame);
     if(this->mHP > 0) {
         this->mHP-=10;
         if(this->mHP <= 0) {
@@ -173,5 +183,5 @@ void Fire::Damage() {
     }
 }
 
-void Fire::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+void Fire::EnterObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
 }

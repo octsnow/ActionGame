@@ -4,13 +4,24 @@
 
 using namespace std;
 
+HitBox::HitBox()
+    : pos(Vector2d(0, 0))
+    , width(0)
+    , height(0)
+    , isPhysics(false)
+    , mTag("") {
+
+    this->isActive = false;
+}
+
 HitBox::HitBox(double x, double y, int width, int height, bool isPhysics, string tag)
     : pos(Vector2d(x, y))
     , width(width)
     , height(height)
     , isPhysics(isPhysics)
     , mTag(tag) {
-        this->isActive = false;
+
+    this->isActive = false;
 }
     
 HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, string tag)
@@ -19,7 +30,8 @@ HitBox::HitBox(Vector2d pos, int width, int height, bool isPhysics, string tag)
     , height(height)
     , isPhysics(isPhysics)
     , mTag(tag) {
-        this->isActive = false;
+
+    this->isActive = false;
 }
 
 bool HitBox::IsHitBox(const HitBox target, const Vector2d pos, const Vector2d targetPos) const {

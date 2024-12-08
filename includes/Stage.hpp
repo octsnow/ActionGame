@@ -1,20 +1,26 @@
 #pragma once
 
-#include "OctGame/OctGame.hpp"
+#include "OctGame.hpp"
 #include "Object.hpp"
+#include <string>
 #include <vector>
 
 enum class CollisionType {
 	AIR,
-	BLOCK
+    BLOCK
 };
 
 class Stage {
 public:
+    void LoadStage(OctGame* pOctGame, const std::string filepath, int blockSize);
     void SetStage(const int* stage, int width, int height, int blockSize);
     void SetScreenSize(int width, int height);
-	Vector2d AdjustVector(Object* obj);
+
+    int GetWidth();
+    int GetHeight();
 	CollisionType GetColType(int blockNum);
+
+	Vector2d AdjustVector(Object* obj);
     void CheckHitBlock(ObjectList& objList);
     void Draw(OctGame* game, Camera* pCamera);
 

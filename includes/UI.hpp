@@ -1,6 +1,6 @@
 #pragma once
 
-#include "OctGame/OctGame.hpp"
+#include "OctGame.hpp"
 #include "Item.hpp"
 #include "Player.hpp"
 

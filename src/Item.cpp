@@ -1,5 +1,4 @@
 #include "Item.hpp"
-#include <iostream>
 #include <cmath>
 #include <numbers>
 #include <time.h>
@@ -25,9 +24,24 @@ void Item::Update(OctGame* pOctGame) {
     this->SetOffsetPosition(pos.x, pos.y);
 }
 
-void Item::StayObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
-    if(pTargetObject->CompareTag("Player") && !pTargetHitbox->CompareTag("attack") && this->CanPickup()) {
-        this->PushMessage(ObjectMessage::OBJMSG_DESTROY);
+void Item::StayObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+    if(pOctGame == NULL) {
+        printf("pOctGame is nullptr\n");
+        return;
+    }
+    if(pTargetObject == NULL) {
+        printf("pTaretObject is nullptr\n");
+        return;
+    }
+    if(pTargetHitbox == NULL) {
+        printf("pTargetHitbox is nullptr\n");
+        return;
+    }
+    MovableObject::StayObject(pOctGame, hitbox, pTargetObject, pTargetHitbox);
+    if(pTargetObject->CompareTag("Player")) {
+        if(pTargetHitbox->CompareTag("body") && this->CanPickup()) {
+            this->PushMessage(ObjectMessage::OBJMSG_DESTROY);
+        }
     }
 }
 
@@ -57,9 +71,11 @@ void Coin::Update(OctGame* pOctGame) {
 
 }
 
-void Coin::EnterObject(HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+void Coin::EnterObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
     if(pTargetObject->CompareTag("Player")) {
-        this->PushMessage(ObjectMessage::OBJMSG_DESTROY);
+        if(pTargetHitbox->CompareTag("body")) {
+            this->PushMessage(ObjectMessage::OBJMSG_DESTROY);
+        }
     }
 }
 
@@ -70,7 +86,7 @@ void SlimeHat::Init(OctGame* pOctGame) {
     this->SetColliderSet({0});
     this->SwitchCollider(0);
     this->SetImageHandle(0, {
-        pOctGame->LoadImageFile("images/slimeHat.bmp", 0.5, 0.5, true)});
+        pOctGame->LoadImageFile("assets/images/slimeHat.bmp", 0.5, 0.5, true)});
     this->SetSize(50, 50);
     this->mItemID = ITEM_ID::HAT_SLIME;
 }
@@ -82,7 +98,7 @@ void SlimeWeapon::Init(OctGame* pOctGame) {
     this->SetColliderSet({0});
     this->SwitchCollider(0);
     this->SetImageHandle(0, {
-        pOctGame->LoadImageFile("images/waterball.bmp", 0.5, 0.5, true)});
+        pOctGame->LoadImageFile("assets/images/waterball.bmp", 0.5, 0.5, true)});
     this->SetSize(50, 50);
     this->mItemID = ITEM_ID::WEAPON_SLIME;
 }
@@ -94,7 +110,7 @@ void FireWeapon::Init(OctGame* pOctGame) {
     this->SetColliderSet({0});
     this->SwitchCollider(0);
     this->SetImageHandle(0, {
-        pOctGame->LoadImageFile("images/slimeHat.bmp", 0.5, 0.5, true)});
+        pOctGame->LoadImageFile("assets/images/slimeHat.bmp", 0.5, 0.5, true)});
     this->SetSize(50, 50);
     this->mItemID = ITEM_ID::WEAPON_FIRE;
 }
