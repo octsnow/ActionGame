@@ -1,24 +1,46 @@
-SRC_FILES = $(wildcard *.cpp)
-INCLUDE_FILES = /I C:\glut\freeglut-3.2.1\install\include
-LIB_FILES = 	$(wildcard C:\glut\freeglut-3.2.1\install\lib\*.lib) $(wildcard C:\glut\freeglut-3.2.1\install_d\lib\*.lib)
-GAMESRC_FILES = $(wildcard OctGame/*.cpp)
-OBJ_FILES = $(SRC_FILES:%.cpp=%.obj) $(GAMESRC_FILES:%.cpp=%.obj)
+encode = $(subst $() ,*,$(1))
+decode = $(subst *,$() ,$(1))
+quotes = $(addprefix ',$(addsuffix ',$(1)))
+includes = $(addprefix -I,$(1))
+libs = $(addprefix -LIBPATH:,$(1))
 
-all: allcpp
+RM = cmd.exe /C del
 
-.SUFFIXES: .cpp .obj
+SRC_DIR = src
+OBJ_DIR = obj
 
-main: $(OBJ_FILES)
-	cl /EHsc $(subst OctGame/,,$^) $(LIB_FILES) $(INCLUDE_FILES) /Fe:main
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.obj,$(SRCS))
+INC_DIR = includes ..\OctGame\includes C:\glut\freeglut-3.2.1\install\include $(call encode,C:\Program Files (x86)\OpenAL 1.1 SDK\include)
+LIB_DIR = ..\..\OctBinary\lib ..\..\Wav\lib ..\OctGame\lib C:\glut\freeglut-3.2.1\install\lib C:\glut\freeglut-3.2.1\install_d\lib $(call encode,C:\Program Files (x86)\OpenAL 1.1 SDK\libs\Win64)
 
-allcpp:
-	cl /EHsc /std:c++20 /DOCT_DEBUG $(SRC_FILES) $(GAMESRC_FILES) $(LIB_FILES) $(INCLUDE_FILES) /Fe:main
+INC_DIR := $(call decode,$(call includes,$(call quotes,$(INC_DIR))))
+LIB_DIR := $(call decode,$(call libs,$(call quotes,$(LIB_DIR))))
 
-.cpp.obj:
-	cl /c /EHsc /std:c++20 /DOCT_DEBUG $< /Fo$(@F)
+TARGET = out/main.exe
+COMPILEOPTIONS = -EHsc -std:c++20 -c
+DEBUGFLAGS = -DOCT_DEBUG
+CXXFLAGS := $(COMPILEOPTIONS)
 
-run: main
-	main
+.SUFFIXES:.obj .cpp
+.PHONY: debug release
+
+all: debug
+
+debug: CXXFLAGS = $(COMPILEOPTIONS) $(DEBUGFLAGS)
+debug: $(TARGET)
+
+release: CXXFLAGS = $(COMPILEOPTIONS)
+release: $(TARGET)
+
+$(TARGET): $(OBJS)
+	LINK $(OBJS) $(LIB_DIR) -OUT:$(TARGET)
+
+$(OBJ_DIR)/%.obj: $(SRC_DIR)/%.cpp
+	cl $(CXXFLAGS) $< -Fo$(OBJ_DIR)\$(@F) $(INC_DIR)
+
+run:
+	$(TARGET)
 
 clean:
-	rm *.obj *.exe
+	-$(RM) $(subst /,\,$(OBJS)) $(subst /,\,$(TARGET))
