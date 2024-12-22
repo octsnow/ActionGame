@@ -18,7 +18,7 @@ Item::Item() {
 }
 
 void Item::Update(OctGame* pOctGame) {
-    Vector2d pos = this->GetOffsetPosition();
+    Vector2D pos = this->GetOffsetPosition();
     time_t elapsedTime = clock() - this->mStartTime;
     pos.y = sin((elapsedTime % (ITEM_MOVE_CYCLE_TIME * 1000) / (double)(ITEM_MOVE_CYCLE_TIME * 1000)) * numbers::pi) * ITEM_MOVE_HEIGHT - ITEM_MOVE_HEIGHT;
     this->SetOffsetPosition(pos.x, pos.y);

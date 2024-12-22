@@ -1,14 +1,16 @@
 #include "Player.hpp"
 #include "Enemy.hpp"
 
-#define HITBOX_BODY_WIDTH  60
+#define HITBOX_BODY_WIDTH  45
 #define HITBOX_BODY_HEIGHT 100
 #define HITBOX_ATTACK_WIDTH  40
 #define HITBOX_ATTACK_HEIGHT 100
 #define HITBOX_VACUUM_WIDTH  500
 #define HITBOX_VACUUM_HEIGHT 500
+#define HITBOX_BLOWER_WIDTH  HITBOX_VACUUM_WIDTH
+#define HITBOX_BLOWER_HEIGHT HITBOX_VACUUM_HEIGHT
 
-#define HITBOX_BODY_OFFSET_X   20
+#define HITBOX_BODY_OFFSET_X   ((100 - HITBOX_BODY_WIDTH) / 2.0)
 #define HITBOX_ATTACK_OFFSET_X (HITBOX_BODY_OFFSET_X + HITBOX_BODY_WIDTH)
 
 #define MAX_SPEED_X 4
@@ -18,6 +20,7 @@
 #define COLLIDER_SET_IDLE 0
 #define COLLIDER_SET_ATTACK 1
 #define COLLIDER_SET_VACUUM 2
+#define COLLIDER_SET_BLOWER 3
 
 using namespace std;
 
@@ -57,11 +60,18 @@ void Player::Init(OctGame* pOctGame) {
             HITBOX_VACUUM_WIDTH,
             HITBOX_VACUUM_HEIGHT,
             false, "vacuum");
+    collider.AddHitBox(
+            HITBOX_BODY_OFFSET_X + HITBOX_BODY_WIDTH / 2.0 - HITBOX_BLOWER_WIDTH / 2.0,
+            HITBOX_BODY_HEIGHT / 2.0 - HITBOX_BLOWER_HEIGHT / 2.0,
+            HITBOX_BLOWER_WIDTH,
+            HITBOX_BLOWER_HEIGHT,
+            false, "blower");
     this->SetCollider(collider);
 
     this->SetColliderSet({0});
     this->SetColliderSet({0, 1});
     this->SetColliderSet({0, 2});
+    this->SetColliderSet({0, 3});
     this->SwitchCollider(COLLIDER_SET_IDLE);
 
     this->SetSize(100, 100);
@@ -89,6 +99,8 @@ void Player::Update(OctGame* pOctGame) {
     }
     if(pOctGame->IsPressed('k')) {
         this->SwitchCollider(COLLIDER_SET_VACUUM);
+    } else if(pOctGame->IsPressed('l')) {
+        this->SwitchCollider(COLLIDER_SET_BLOWER);
     } else {
         if(this->IsAttacking()) {
             this->SwitchCollider(COLLIDER_SET_ATTACK);
@@ -96,7 +108,7 @@ void Player::Update(OctGame* pOctGame) {
             this->SwitchCollider(COLLIDER_SET_IDLE);
         }
     }
-    Vector2d vec = this->GetVector();
+    Vector2D vec = this->GetVector();
     if(!isMoved) {
         if(!this->IsAttacking()) {
             this->SetAnimationNum(0);

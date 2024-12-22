@@ -10,7 +10,7 @@ enum class ENEMY_ID {
 
 struct EnemyInitData {
     ENEMY_ID id;
-    Vector2d pos;
+    Vector2D pos;
 };
 
 class Enemy : public MovableObject {

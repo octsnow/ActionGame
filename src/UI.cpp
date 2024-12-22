@@ -2,7 +2,10 @@
 
 using namespace std;
 
-void Status::Update(OctGame* pOctGame, StatusData& data) {
+void Status::Update(OctGame* pOctGame) {
+}
+
+void Status::Draw(OctGame* pOctGame, StatusData& data) {
     pOctGame->DrawText(0, 0, RGB(0xFF, 0xFF, 0xFF), "coin: %d", data.coin);
     if(data.hp > 0) {
         pOctGame->DrawBox(100, 0, 100 + data.hp, 30, 0x00FF00, true);
@@ -56,8 +59,9 @@ void Menu::Update(OctGame* pOctGame) {
     if(this->mX != x || this->mY != y) {
         pOctGame->audio.Play("Cursor");
     }
+}
 
-    // draw
+void Menu::Draw(OctGame* pOctGame) {
     pOctGame->DrawBox(MENU_LEFTTOP_X, MENU_LEFTTOP_Y, MENU_LEFTTOP_X + MENU_W, MENU_LEFTTOP_Y + MENU_H, 0xCFA063, true);
 
     int invLtX = MENU_LEFTTOP_X + INVENTORY_LEFTTOP_X;
@@ -229,7 +233,7 @@ UI::UI() {
     this->mIsMenu = false;
 }
 
-void UI::Update(OctGame* pOctGame, StatusData& data) {
+void UI::Update(OctGame* pOctGame) {
     if(pOctGame->IsDown(KEY_ESC)) {
         if(this->IsMenu() && this->mMenu.IsRoot()) {
             this->OffMenu();
@@ -237,10 +241,16 @@ void UI::Update(OctGame* pOctGame, StatusData& data) {
             this->OnMenu();
         }
     }
-
-    this->mStatus.Update(pOctGame, data);
+    this->mStatus.Update(pOctGame);
     if(this->IsMenu()) {
         this->mMenu.Update(pOctGame);
+    }
+}
+
+void UI::Draw(OctGame* pOctGame, StatusData& data) {
+    this->mStatus.Draw(pOctGame, data);
+    if(this->IsMenu()) {
+        this->mMenu.Draw(pOctGame);
     }
 }
 

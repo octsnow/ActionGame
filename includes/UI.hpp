@@ -33,14 +33,16 @@ struct PulldownElem {
 
 class Status {
 public:
-    void Update(OctGame* pOctGame, StatusData& data);
+    void Update(OctGame* pOctGame);
+    void Draw(OctGame *pOctGame, StatusData& data);
 };
 
 class Menu {
 public:
     Menu();
     void Init();
-    void Update(OctGame* pOctGame);
+    void Update(OctGame *pOctGame);
+    void Draw(OctGame *pOctGame);
     void SetPosition(unsigned int x, unsigned int y);
     void AddItem(ITEM_ID item);
     ITEM_ID GetItem(unsigned int x, unsigned int y);
@@ -58,8 +60,8 @@ public:
 
     void Equip();
     void Remove();
-    static void CallbackEquip(Menu* pMenu);
-    static void CallbackRemove(Menu* pMenu);
+    static void CallbackEquip(Menu *pMenu);
+    static void CallbackRemove(Menu *pMenu);
 
 private:
     ITEM_ID mInventory[INVENTORY_W * INVENTORY_H];
@@ -77,7 +79,8 @@ private:
 class UI {
 public:
     UI();
-    void Update(OctGame* pOctGame, StatusData& data);
+    void Update(OctGame* pOctGame);
+    void Draw(OctGame *pOctGame, StatusData& data);
     void AddItem(ITEM_ID item);
     void OnMenu();
     void OffMenu();

@@ -8,8 +8,8 @@ Camera::Camera(unsigned int stageWidth, unsigned int stageHeight, unsigned int b
 , mScreenWidth(screenWidth) {
 }
 
-void Camera::SetPlayerPosition(Vector2d pos) {
-    Vector2d cameraPos;
+void Camera::SetPlayerPosition(Vector2D pos) {
+    Vector2D cameraPos;
     if(pos.x < static_cast<int>(this->mScreenWidth / 2)) {
         this->mPos.x = 0;
     } else if(pos.x > this->mStageWidth * this->mBlockSize - static_cast<int>(this->mScreenWidth / 2)) {
@@ -19,16 +19,16 @@ void Camera::SetPlayerPosition(Vector2d pos) {
     }
 }
 
-Vector2d Camera::GetPosition() const {
+Vector2D Camera::GetPosition() const {
     return this->mPos;
 }
 
-Vector2d Camera::CalcViewPosition(Vector2d pos) {
+Vector2D Camera::CalcViewPosition(Vector2D pos) {
     return this->CalcViewPosition(pos.x, pos.y);
 }
 
-Vector2d Camera::CalcViewPosition(double x, double y) {
-    Vector2d pos;
+Vector2D Camera::CalcViewPosition(double x, double y) {
+    Vector2D pos;
     pos.x = x - this->mPos.x;
     pos.y = y - this->mPos.y;
 

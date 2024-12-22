@@ -5,6 +5,8 @@
 #include "Enemy.hpp"
 #include "Stage.hpp"
 #include "UI.hpp"
+#include "Gimmick.hpp"
+#include "ObjectList.hpp"
 
 #include <time.h>
 #include <windows.h>
@@ -14,7 +16,7 @@
 #define STAGE_H 12
 #define STAGE_W 100
 #define BLOCK_SIZE 50
-#define GRAVITY 0.9
+#define GRAVITY 0.5
 #define FPS 60
 #define OBJECT_COIN 0
 
@@ -36,36 +38,53 @@ namespace {
     OctGame g_oct_game;
     Stage g_stage;
     ObjectList g_object_list(g_stage.GetWidth() * BLOCK_SIZE, g_stage.GetHeight() * BLOCK_SIZE);
-    Player* g_pplayer;
+    Player* g_player;
     UI g_ui;
     bool koma_mode = false;
+
+    void InitStageObjects(ObjectList *pObjectList, std::vector<STAGEOBJECTINFO> sois) {
+        for(STAGEOBJECTINFO soi : sois) {
+            switch(soi.blockId) {
+                case BLOCK_ID::BID_GOAL:{
+                    Goal *goal = new Goal();
+                    goal->SetPosition(soi.position);
+                    pObjectList->AppendObject(goal);
+                    break;
+                }
+                default:
+                    printf("InitStageObjects: invalid block id\n");
+                    break;
+            }
+        }
+    }
 
     void Update() {
         Camera camera(g_stage.GetWidth(), g_stage.GetHeight(), BLOCK_SIZE, SCREEN_W);
         
         // calculate camera position
-        camera.SetPlayerPosition(g_pplayer->GetPosition());
+        camera.SetPlayerPosition(g_player->GetPosition());
 
-        g_pplayer->SetGears(g_ui.GetGears());
+        g_player->SetGears(g_ui.GetGears());
      
         // update
         StatusData statusData;
-        statusData.coin = g_pplayer->GetCoin();
-        statusData.hp = g_pplayer->GetHP();
+        statusData.coin = g_player->GetCoin();
+        statusData.hp = g_player->GetHP();
 
         if(!g_ui.IsMenu()) {
-            g_object_list.Update(&g_oct_game, &camera);
+            g_object_list.Update(&g_oct_game, &g_stage);
         }
 
-        ITEM_ID item = g_pplayer->PopItem();
+        ITEM_ID item = g_player->PopItem();
         while(item != ITEM_ID::ITEM_ID_NONE) {
             g_ui.AddItem(item);
-            item = g_pplayer->PopItem();
+            item = g_player->PopItem();
         }
+        g_ui.Update(&g_oct_game);
 
-        g_stage.CheckHitBlock(g_object_list);
+        g_object_list.Draw(&g_oct_game, &camera);
         g_stage.Draw(&g_oct_game, &camera);
-        g_ui.Update(&g_oct_game, statusData);
+        g_ui.Draw(&g_oct_game, statusData);
         g_oct_game.Update();
     }
 
@@ -77,6 +96,9 @@ namespace {
         if(g_sys_info.countTime >= FrameTime) {
             glClear(GL_COLOR_BUFFER_BIT);
             g_oct_game.ClearScreen();
+#ifndef OCT_DEBUG
+            g_oct_game.DrawBox(0, 0, SCREEN_W, SCREEN_H, 0x00AAAA, true);
+#endif
             Update();
             g_sys_info.countTime -= FrameTime;
             g_oct_game.ScreenSwap();
@@ -94,7 +116,6 @@ namespace {
         
         glMatrixMode(GL_MODELVIEW);
     }
-
 }
 
 void Game::Start(int argc, char** argv) {
@@ -110,11 +131,6 @@ void Game::Init(int argc, char** argv) {
     g_oct_game.ReshapeFunc(resize);
     g_oct_game.IdleFunc(idle);
 
-    Coin* coin;
-
-    g_pplayer = new Player();
-    coin = new Coin();
-
     g_oct_game.audio.Load("assets/sounds/H.wav", "BGM");
     g_oct_game.audio.Load("assets/sounds/damage.wav", "Damage");
     g_oct_game.audio.Load("assets/sounds/coin.wav", "Coin");
@@ -125,6 +141,7 @@ void Game::Init(int argc, char** argv) {
     g_oct_game.audio.SetVolume("Coin", 0.5);
     g_oct_game.audio.SetVolume("Cursor", 0.5);
 
+    // Initialize Enemy
     for(EnemyInitData data : enemyInitData) {
         switch(data.id) {
         case ENEMY_ID::ENEMY_SLIME:
@@ -146,28 +163,38 @@ void Game::Init(int argc, char** argv) {
         }
     }
 
-    // load image
+    // Initialize Flooting
+    Flooting* flooting = new Flooting();
+    flooting->SetPosition(100, 200);
+    g_object_list.AppendObject(flooting);
+
+    // Initialize Coin
+    Coin* coin;
+    coin = new Coin();
     coin->SetImageHandle(0, {
         g_oct_game.LoadImageFile("assets/images/1-yen.bmp",
         BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f)});
-
     coin->SetSize(50, 50);
     coin->SetPosition(BLOCK_SIZE * 12, SCREEN_H - BLOCK_SIZE * 5);
-
-    g_pplayer->SetGravity(GRAVITY);
-
-    //g_stage.SetStage(g_stageData, STAGE_W, STAGE_H, BLOCK_SIZE);
-    //g_stage.LoadStage("test.stg", BLOCK_SIZE);
-    g_stage.LoadStage(&g_oct_game, "a.stg", BLOCK_SIZE);
-    g_stage.SetScreenSize(SCREEN_W, SCREEN_H);
-
     g_object_list.AppendObject(coin);
-    g_object_list.AppendObject(g_pplayer);
+
+    // Initialize Player
+    g_player = new Player();
+    g_player->SetGravity(GRAVITY);
+    g_object_list.AppendObject(g_player);
+
+    // Initialize Stage
+    std::vector<STAGEOBJECTINFO> sois;
+    g_stage.LoadStage(&g_oct_game, "a.stg", BLOCK_SIZE, &sois);
+    InitStageObjects(&g_object_list, sois);
+
+    // Initialize ObjecList
     g_object_list.for_each([&](LinkedNode<ObjectListData>* node) {
             Object* pObject = node->GetValue()->pObject;
             pObject->Init(&g_oct_game);
     });
 
+    g_stage.SetScreenSize(SCREEN_W, SCREEN_H);
     glClearColor(0.0, 0.0, 1.0, 0.0);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);

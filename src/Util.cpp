@@ -27,6 +27,52 @@ namespace {
     }
 }
 
+double Vector2D::Length() {
+    return sqrt(this->x * this->x + this->y * this->y);
+}
+
+Vector2D& Vector2D::operator*=(const double& scalar) {
+    this->x *= scalar;
+    this->y *= scalar;
+
+    return *this;
+}
+
+Vector2D operator+(const Vector2D& vector1, const Vector2D& vector2) {
+    Vector2D newVector;
+
+    newVector.x = vector1.x + vector2.x;
+    newVector.y = vector1.y + vector2.y;
+
+    return newVector;
+}
+
+Vector2D operator-(const Vector2D& vector1, const Vector2D& vector2) {
+    Vector2D newVector;
+
+    newVector.x = vector1.x - vector2.x;
+    newVector.y = vector1.y - vector2.y;
+
+    return newVector;
+}
+
+Vector2D operator*(const Vector2D& vector, const double& scalar) {
+    Vector2D newVector;
+
+    newVector.x = vector.x * scalar;
+    newVector.y = vector.x * scalar;
+
+    return newVector;
+}
+
+Vector2D operator*(const double& scalar, const Vector2D& vector) {
+    return vector * scalar;
+}
+
+double Vector2D::CrossProduct(Vector2D v1, Vector2D v2) {
+    return v1.x * v2.y - v1.y * v2.x;
+}
+
 Random::Random(RANDOM_METHOD method, unsigned int seed) {
     this->mLastValue = seed;
     this->mMethod = method;
@@ -49,4 +95,64 @@ unsigned int Random::GetRandom() {
 
     this->mLastValue = v;
     return v;
+}
+
+bool CollisionDetection2D::CheckHitRectanglePoint(CollisionDetection2D::RECTANGLE r, CollisionDetection2D::POINT p) {
+    return p.position.x >= r.position.x && p.position.x - r.position.x <= r.width
+        && p.position.y >= r.position.y && p.position.y - r.position.y <= r.height;
+}
+
+bool CollisionDetection2D::CheckHitRectangleRectangle(CollisionDetection2D::RECTANGLE r1, CollisionDetection2D::RECTANGLE r2) {
+    double x1, x2, y1, y2, w1, h1;
+
+    if(r1.position.x < r2.position.x) {
+        x1 = r1.position.x;
+        w1 = r1.width;
+        x2 = r2.position.x;
+    } else {
+        x1 = r2.position.x;
+        w1 = r2.width;
+        x2 = r1.position.x;
+    }
+
+    if(r1.position.y < r2.position.y ){
+        y1 = r1.position.y;
+        h1 = r1.height;
+        y2 = r2.position.y;
+    }else{
+        y1 = r2.position.y;
+        h1 = r2.height;
+        y2 = r1.position.y;
+    }
+
+    return (x2 - x1) < w1 && (y2 - y1) < h1;
+}
+
+bool CollisionDetection2D::CheckHitLineLine(CollisionDetection2D::LINE l1, CollisionDetection2D::LINE l2) {
+    double a1 = (l1.p1.position.y - l1.p2.position.y) / (l1.p1.position.x - l1.p2.position.x);
+    double a2 = (l2.p1.position.y - l2.p2.position.y) / (l2.p1.position.x - l2.p2.position.x);
+    double b1 = l1.p1.position.y - a1 * l1.p1.position.x;
+    double b2 = l2.p1.position.y - a2 * l2.p1.position.x;
+    double x = (b2 - b1) / (a1 - a2);
+    double y = a1 * x + b1;
+
+    return l1.p1.position.x <= x && x <= l1.p2.position.x
+        && l1.p1.position.y <= y && y <= l1.p2.position.y;
+}
+
+bool CollisionDetection2D::CheckHitQuadranglePoint(CollisionDetection2D::QUADRANGLE q, CollisionDetection2D::POINT p) {
+    double cp1 = Vector2D::CrossProduct(
+            q.p2.position - q.p1.position,
+            p.position - q.p1.position);
+    double cp2 = Vector2D::CrossProduct(
+            q.p3.position - q.p2.position,
+            p.position - q.p2.position);
+    double cp3 = Vector2D::CrossProduct(
+            q.p4.position - q.p3.position,
+            p.position - q.p3.position);
+    double cp4 = Vector2D::CrossProduct(
+            q.p1.position - q.p4.position,
+            p.position - q.p4.position);
+
+    return cp1 > 0 && cp2 > 0 && cp3 > 0 && cp4 > 0;
 }

@@ -36,7 +36,7 @@ void Enemy::Draw(OctGame* pOctGame, Camera* pCamera) {
     Object::Draw(pOctGame, pCamera);
 
     int hpWidth = this->mWidth * ((float)this->mHP / this->mMaxHP);
-    Vector2d viewPos = pCamera->CalcViewPosition(this->mPosition.x, this->mPosition.y - HP_OFFSET_Y);
+    Vector2D viewPos = pCamera->CalcViewPosition(this->mPosition.x, this->mPosition.y - HP_OFFSET_Y);
 
     pOctGame->DrawBox(
             viewPos.x, viewPos.y,
@@ -85,11 +85,11 @@ void Slime::Update(OctGame* pOctGame) {
         this->TurnOther();
     }
 
-    if(this->IsGround()) {
+    if(this->IsGround() && abs(this->GetVector().x) < 1) {
         if(this->mIsLeft) {
-            this->SetVector(-1, 0);
+            this->AddVector(-0.1, 0);
         } else {
-            this->SetVector(1, 0);
+            this->AddVector(0.1, 0);
         }
     }
 
@@ -164,7 +164,7 @@ void Fire::Update(OctGame* pOctGame) {
 }
 
 void Fire::Draw(OctGame* pOctGame, Camera* pCamera) {
-    Vector2d viewPos = pCamera->CalcViewPosition(this->GetPosition());
+    Vector2D viewPos = pCamera->CalcViewPosition(this->GetPosition());
     pOctGame->DrawBox(viewPos.x, viewPos.y, viewPos.x + this->GetWidth(), viewPos.y + this->GetWidth(), 0xFF3300, true);
     Enemy::Draw(pOctGame, pCamera);
 }

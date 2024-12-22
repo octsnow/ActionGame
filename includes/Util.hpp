@@ -9,12 +9,22 @@ enum class RANDOM_METHOD {
     RM_LFSR,
 };
 
-class Vector2d {
+class Vector2D {
 public:
-    Vector2d() : x(0), y(0) {}
-    Vector2d(double x, double y): x(x), y(y) {}
+    Vector2D() : x(0), y(0) {}
+    Vector2D(double x, double y): x(x), y(y) {}
+    double Length();
     double x, y;
+
+    Vector2D& operator*=(const double& scalar);
+
+    static double CrossProduct(Vector2D v1, Vector2D v2);
 };
+
+Vector2D operator+(const Vector2D& vector1, const Vector2D& vector2);
+Vector2D operator-(const Vector2D& vector1, const Vector2D& vector2);
+Vector2D operator*(const Vector2D& vector, const double& scalar);
+Vector2D operator*(const double& scalar, const Vector2D& vector);
 
 template<typename T>
 class LinkedNode {
@@ -162,4 +172,36 @@ public:
 private:
     unsigned int mLastValue;
     RANDOM_METHOD mMethod;
+};
+
+namespace CollisionDetection2D {
+typedef struct point_tag {
+    Vector2D position;
+} POINT;
+
+typedef struct line_tag {
+    POINT p1;
+    POINT p2;
+} LINE;
+
+typedef struct rectangle_tag {
+    Vector2D position;
+    double width;
+    double height;
+} RECTANGLE;
+
+// p1 -- p2
+//  |    |
+// p4 -- p3
+typedef struct quadrangle_tag {
+    POINT p1;
+    POINT p2;
+    POINT p3;
+    POINT p4;
+} QUADRANGLE;
+
+bool CheckHitRectanglePoint(RECTANGLE r, POINT p);
+bool CheckHitRectangleRectangle(RECTANGLE r1, RECTANGLE r2);
+bool CheckHitLineLine(LINE l1, LINE l2);
+bool CheckHitQuadranglePoint(QUADRANGLE q, POINT p);
 };

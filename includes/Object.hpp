@@ -1,27 +1,12 @@
 #pragma once
 
 #include <string>
-#include <queue>
-#include <stack>
-#include <vector>
-#include <tuple>
 
 #include "OctGame.hpp"
 #include "Camera.hpp"
 #include "Collider.hpp"
 
-typedef uint32_t HitBoxHandle;
-
 class Object;
-class ObjectList;
-class LQTData;
-class LinearQuaternaryTree;
-class HandlePool;
-
-struct ObjectListData {
-    Object* pObject;
-    std::vector<LinkedNode<LQTData>*> lqtNodeNodes;
-};
 
 // TODO:
 typedef struct hit_info_tag {
@@ -30,14 +15,10 @@ typedef struct hit_info_tag {
     HitBox target_hitbox;
 } HITINFO;
 
-typedef LinkedList<LQTData> LQTNode;
-typedef LinkedNode<LQTData> LQTNodeNode;
-
 enum ObjectMessage {
     OBJMSG_DESTROY,
     OBJMSG_NONE
 };
-
 
 class Object {
 public:
@@ -61,17 +42,19 @@ public:
     Collider GetCollider();
 
     void SetPosition(double x, double y);
+    void SetPosition(Vector2D position);
     void SetOffsetPosition(double x, double y);
-    Vector2d GetPosition() const;
-    Vector2d GetLastPosition() const;
-    Vector2d GetOffsetPosition() const;
+    Vector2D GetPosition() const;
+    Vector2D GetLastPosition() const;
+    Vector2D GetOffsetPosition() const;
     void Translate(double x, double y);
 
     void SetVector(double x, double y);
-    void SetVector(Vector2d vector);
-    Vector2d GetVector() const;
+    void SetVector(Vector2D vector);
+    Vector2D GetTranslateVector() const;
+    Vector2D GetVector() const;
     void AddVector(double x, double y);
-    void AddVector(Vector2d vector);
+    void AddVector(Vector2D vector);
 
     void SetWeight(double weight);
     double GetWeight();
@@ -133,10 +116,11 @@ protected:
 
     int mWidth;
     int mHeight;
-    Vector2d mPosition;
-    Vector2d mLastPosition;
-    Vector2d mOffsetPosition;
-    Vector2d mVector;
+    Vector2D mPosition;
+    Vector2D mLastPosition;
+    Vector2D mOffsetPosition;
+    Vector2D mVector;
+    Vector2D mTranslateVector;
     bool mIsLeft;
     double mWeight;
 
@@ -156,59 +140,3 @@ protected:
     bool mIsMoved;
 };
 
-class HandlePool {
-public:
-    HandlePool();
-    HitBoxHandle GetHandle();
-    void FreeHandle(HitBoxHandle handle);
-
-private:
-    std::stack<HitBoxHandle> mPool;
-    HitBoxHandle mMax;
-};
-
-class LQTData{
-public:
-    LQTData();
-    LQTData(uint32_t hitboxIndex, Object* pObject, uint32_t handle, LQTNode* pList);
-    uint32_t hitboxIndex;
-    Object* pObject;
-    uint32_t handle;
-    LQTNode* pList;
-    std::vector<HitBoxHandle> lastHitBoxes;
-    std::vector<HitBoxHandle> newHitBoxes;
-};
-
-class LinearQuaternaryTree {
-public:
-    LinearQuaternaryTree(int depth, unsigned int rootWidth, unsigned int rootHeight);
-    ~LinearQuaternaryTree();
-    std::vector<LQTNodeNode*> Append(Object* object);
-    LQTNodeNode* AppendHitBox(Object* pObject, uint32_t hitboxIndex);
-    LQTNodeNode* AppendHitBox(Object* pObject, uint32_t hitboxIndex, HitBoxHandle handle);
-    LQTNodeNode* Reregist(LQTNodeNode* node);
-    void Remove(LQTNodeNode* node);
-    void checkHit() const;
-
-private:
-    LQTNode* mTree;
-    HandlePool mHandlePool;
-    int mDepth;
-    unsigned int mRootWidth;
-    unsigned int mRootHeight;
-};
-
-class ObjectList {
-public:
-    ObjectList(unsigned int worldWidth, unsigned int worldHeight);
-    void AppendObject(Object* pObject);
-    void CheckHitObjects() const;
-    void Update(OctGame* pOctGame, Camera* pCamera);
-    template <typename Func> void for_each(Func func) {
-        this->mObjectList.for_each(func);
-    }
-
-private:
-    LinkedList<ObjectListData> mObjectList;
-    LinearQuaternaryTree mHitBoxList;
-};

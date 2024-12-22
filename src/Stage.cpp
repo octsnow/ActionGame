@@ -1,17 +1,247 @@
 #include "Stage.hpp"
 #include <fstream>
 
-#define BLOCK_STONE 1
-#define BLOCK_SOIL 2
-
 using namespace std;
+
+#pragma comment(lib, "BlockID.lib")
 
 namespace {
     int g_ihandle_block_soil;
     int g_ihandle_block_stone;
+
+    bool LineIsHitBlock(std::vector<BLOCK_ID> *stage, int sw, int sh, int blockSize, Vector2D pos, int length, bool isVertical) {
+        if(isVertical) {
+            double offset = pos.y - static_cast<int>(pos.y / blockSize) * blockSize;
+            int e = (offset + length - 1) / blockSize;
+            if((offset + length - 1) - (e * blockSize) > 0) {
+                e++;
+            }
+
+            for(int i = 0; i < e; i++) {
+                int col = static_cast<int>(pos.x / blockSize);
+                int row = static_cast<int>(pos.y / blockSize) + i;
+
+                if(col < 0 || col >= sw
+                || row < 0 || row >= sh) {
+                    continue;
+                }
+
+                int bi = row * sw + col;
+                if(Stage::GetCollisionType((*stage)[bi]) == CollisionType::BLOCK) {
+                    return true;
+                }
+            }
+        } else {
+            double offset = pos.x - static_cast<int>(pos.x / blockSize) * blockSize;
+            int e = (offset + length - 1) / blockSize;
+            if((offset + length - 1) - (e * blockSize) > 0) {
+                e++;
+            }
+
+            for(int i = 0; i < e; i++) {
+                int col = static_cast<int>(pos.x / blockSize) + i;
+                int row = static_cast<int>(pos.y / blockSize);
+
+                if(col < 0 || col >= sw
+                || row < 0 || row >= sh) {
+                    continue;
+                }
+
+                int bi = row * sw + col;
+
+                if(Stage::GetCollisionType((*stage)[bi]) == CollisionType::BLOCK) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    int CheckLineHitBlock(std::vector<BLOCK_ID> *stage, int sw, int sh, int blockSize, Vector2D pos, int length, Vector2D vec, bool isVertical) {
+        Vector2D newPos;
+        int d = blockSize;
+        if(isVertical) {
+            if(vec.x == 0) {
+                return -1;
+            }
+
+            double slope = vec.y / vec.x;
+            newPos.x = (static_cast<int>(pos.x / blockSize) + (vec.x > 0 ? 1 : 0)) * blockSize + (vec.x > 0 ? 0 : -1);
+            newPos.y = pos.y + (newPos.x - pos.x) * slope;
+
+            if(vec.x < 0) {
+                d = -d;
+            }
+            while(true) {
+                if(LineIsHitBlock(stage, sw, sh, blockSize, newPos, length, isVertical)) {
+                    return newPos.x / blockSize;
+                }
+
+                if((pos.x + vec.x - newPos.x) * vec.x < 0) {
+                    break;
+                }
+
+                newPos.x += d;
+                newPos.y += d * slope;
+            }
+        } else {
+            if(vec.y == 0) {
+                return -1;
+            }
+
+            double slope = vec.x / vec.y;
+            newPos.y = (static_cast<int>(pos.y / blockSize) + (vec.y > 0 ? 1 : 0)) * blockSize + (vec.y > 0 ? 0 : -1);
+            newPos.x = pos.x + (newPos.y - pos.y) * slope;
+
+            if(vec.y < 0) {
+                d = -d;
+            }
+            while(true) {
+                if(LineIsHitBlock(stage, sw, sh, blockSize, newPos, length, isVertical)) {
+                    return newPos.y / blockSize;
+                }
+
+                if((pos.y + vec.y - newPos.y) * vec.y < 0) {
+                    break;
+                }
+
+                newPos.y += d;
+                newPos.x += d * slope;
+            }
+        }
+
+        return -1;
+    }
+
+    Vector2D AdjustBoxVector(std::vector<BLOCK_ID> *stage, int sw, int sh, int blockSize, Vector2D pos, int width, int height, Vector2D vec) {
+        int blockRow, blockCol;
+        double bx, by;
+        double dx = 0, dy = 0;
+        Vector2D newVec = vec;
+
+        if(vec.x > 0) {
+            Vector2D _pos = pos;
+            _pos.x = pos.x + width - 1;
+            blockCol = CheckLineHitBlock(stage, sw, sh, blockSize, _pos, height, vec, true);
+        } else {
+            blockCol = CheckLineHitBlock(stage, sw, sh, blockSize, pos, height, vec, true);
+        }
+
+        if(vec.y > 0) {
+            Vector2D _pos = pos;
+            _pos.y = pos.y + height - 1;
+            blockRow = CheckLineHitBlock(stage, sw, sh, blockSize, _pos, width, vec, false);
+        } else {
+            blockRow = CheckLineHitBlock(stage, sw, sh, blockSize, pos, width, vec, false);
+        }
+
+        if(blockRow == -1 && blockCol == -1) {
+            return vec;
+        }
+
+        if(vec.x > 0) {
+            bx = blockCol * blockSize;
+            dx = bx - (pos.x + width);
+        } else if(vec.x < 0) {
+            bx = (blockCol + 1) * blockSize;
+            dx = bx - pos.x;
+        }
+
+        if(vec.y > 0) {
+            by = blockRow * blockSize;
+            dy = by - (pos.y + height);
+        } else if(vec.y < 0) {
+            by = (blockRow + 1) * blockSize;
+            dy = by - pos.y;
+        }
+
+        double absDx = abs(dx);
+        double absDy = abs(dy);
+
+        if(blockCol == -1) {
+            newVec.y = dy;
+        } else  if(blockRow == -1) {
+            newVec.x = dx;
+        } else if(absDy < absDx) {// || vec.y * dy < 0) {
+            newVec.y = dy;
+        } else if(absDx < absDy) {// || vec.x * dx < 0) {
+            newVec.x = dx;
+        } else if(absDx == absDy) {
+            newVec.x = dx;
+            //newVec.y = dy;
+        }
+
+        return newVec;
+    }
+
+    Vector2D AdjustVector(Collider collider, Vector2D pos, Vector2D vec, int blockSize, int screenWidth, int screenHeight, std::vector<BLOCK_ID> *stage, int sw, int sh){
+        if(vec.x == 0 && vec.y == 0) {
+            return vec;
+        }
+
+        Vector2D newPos = pos + vec;
+        Vector2D newVec = vec;
+        bool isRight = vec.x > 0;
+        bool isFall = vec.y > 0;
+        int checkBlocksX, checkBlocksY;
+
+
+        for(HitBox hitbox : collider.GetHitBoxes()) {
+            if(!hitbox.isPhysics) continue;
+            if(!hitbox.isActive) continue;
+
+            Vector2D _newVec = AdjustBoxVector(
+                    stage,
+                    sw, sh,
+                    blockSize,
+                    pos + hitbox.pos,
+                    hitbox.width,
+                    hitbox.height,
+                    vec);
+
+            if(vec.x != _newVec.x) {
+                Vector2D _pos = pos + hitbox.pos;
+                _pos.x += _newVec.x;
+                Vector2D _vec;
+                _vec.y = _newVec.y;
+                _newVec.y = AdjustBoxVector(
+                        stage,
+                        sw, sh,
+                        blockSize,
+                        _pos,
+                        hitbox.width,
+                        hitbox.height,
+                        _vec).y;
+            } else if(vec.y != _newVec.y) {
+                Vector2D _pos = pos + hitbox.pos;
+                _pos.y += _newVec.y;
+                Vector2D _vec;
+                _vec.x = _newVec.x;
+                _newVec.x = AdjustBoxVector(
+                        stage,
+                        sw, sh,
+                        blockSize,
+                        _pos,
+                        hitbox.width,
+                        hitbox.height,
+                        _vec).x;
+            }
+
+            if(abs(_newVec.x) < abs(newVec.x)) {
+                newVec.x = _newVec.x;
+            }
+            if(abs(_newVec.y) < abs(newVec.y)) {
+                newVec.y = _newVec.y;
+            }
+        }
+
+        return newVec;
+    }
+
 };
 
-void Stage::LoadStage(OctGame* pOctGame, const string filepath, int blockSize) {
+void Stage::LoadStage(OctGame* pOctGame, const string filepath, int blockSize, std::vector<STAGEOBJECTINFO> *outStageObjects) {
     g_ihandle_block_soil = pOctGame->LoadImageFile("assets/images/blocks/soil.bmp", true);
     g_ihandle_block_stone = pOctGame->LoadImageFile("assets/images/blocks/stone.bmp", true);
 
@@ -35,16 +265,32 @@ void Stage::LoadStage(OctGame* pOctGame, const string filepath, int blockSize) {
     uint8_t* stage = new uint8_t[this->mStageWidth * this->mStageHeight];
     ifs.read((char*)stage, sizeof(uint8_t) * this->mStageWidth * this->mStageHeight);
     for(int i = 0; i < width * height; i++) {
-        this->mStage[i] = static_cast<int>(stage[i]);
+        if((BLOCK_ID)stage[i] == BLOCK_ID::BID_NONE || IsBlock((BLOCK_ID)stage[i])) {
+            this->mStage[i] = (BLOCK_ID)(stage[i]);
+        } else {
+            STAGEOBJECTINFO soi;
+            soi.blockId = (BLOCK_ID)stage[i];
+            soi.position.x = i % width * blockSize;
+            soi.position.y = (int)(i / width) * blockSize;
+            outStageObjects->push_back(soi);
+        }
     }
 
     delete[] stage;
 }
 
-void Stage::SetStage(const int* stage, int width, int height, int blockSize) {
+void Stage::SetStage(const int* stage, int width, int height, int blockSize, std::vector<STAGEOBJECTINFO> *outStageObjects) {
     this->mStage.resize(width * height);
     for(int i = 0; i < width * height; i++) {
-        this->mStage[i] = stage[i];
+        if(IsBlock((BLOCK_ID)stage[i])) {
+            this->mStage[i] = (BLOCK_ID)stage[i];
+        } else {
+            STAGEOBJECTINFO soi;
+            soi.blockId = (BLOCK_ID)stage[i];
+            soi.position.x = i % width * blockSize;
+            soi.position.y = (int)(i / width) * blockSize;
+            outStageObjects->push_back(soi);
+        }
     }
 
     this->mStageWidth = width;
@@ -65,138 +311,69 @@ int Stage::GetHeight() {
     return this->mStageHeight;
 }
 
-CollisionType Stage::GetColType(int blockNum) {
-    if(0 < blockNum && blockNum < 3) {
+CollisionType Stage::GetCollisionType(BLOCK_ID blockId) {
+    if(IsBlock(blockId)) {
         return CollisionType::BLOCK;
     }
 
     return CollisionType::AIR;
 }
 
-Vector2d Stage::AdjustVector(Object* obj){
-//    assert(obj->HasColliders());
-    Collider collider = obj->GetCollider();
-//    Collider collider = obj->GetCurrentCollider();
-    Vector2d pos = obj->GetPosition();
-    Vector2d vec = obj->GetVector();
-    Vector2d newPos = {
-        pos.x + vec.x,
-        pos.y + vec.y
-    };
-    Vector2d objNewVec = vec;
-    bool isFall = vec.y > 0;
-    bool isRight = vec.x > 0;
-    int topBlkY, bottomBlkY, leftBlkX, rightBlkX;
-    int checkBlkX, checkBlkY;
+void Stage::Translate(Object *pObject, Vector2D vec) {
+    Vector2D pos = pObject->GetPosition();
+    Vector2D newVec;
 
-    for(HitBox hitBox : collider.GetHitBoxes()) {
-        if(!hitBox.isPhysics) continue;
-        if(!hitBox.isActive) continue;
+    newVec = AdjustVector(
+            pObject->GetCollider(),
+            pos,
+            vec,
+            this->mBlockSize,
+            this->mScreenWidth,
+            this->mScreenHeight,
+            &this->mStage,
+            this->mStageWidth,
+            this->mStageHeight);
 
-        Vector2d rectWorld = {
-            pos.x + hitBox.pos.x,
-            pos.y + hitBox.pos.y
-        };
-        Vector2d rectNewWorld = {
-            newPos.x + hitBox.pos.x,
-            newPos.y + hitBox.pos.y
-        };
+    bool hitGround = vec.y > 0 && vec.y != newVec.y;
+    bool hitWall = vec.x != newVec.x;
 
-        int const leftBlkX      = rectWorld.x / this->mBlockSize,
-                  topBlkY       = rectWorld.y / this->mBlockSize,
-                  bottomBlkY    = (rectWorld.y + hitBox.height - 1) / this->mBlockSize,
-                  rightBlkX     = (rectWorld.x + hitBox.width - 1) / this->mBlockSize;
+    pObject->Translate(newVec.x, newVec.y);
 
-        if(isFall){
-            checkBlkY = (rectNewWorld.y + hitBox.height) / this->mBlockSize;
-        }else{
-            checkBlkY = (rectNewWorld.y - 1) / this->mBlockSize;
-        }
-
-        if(isRight) {
-            checkBlkX = (rectNewWorld.x + hitBox.width) / this->mBlockSize;
-        } else {
-            checkBlkX = (rectNewWorld.x - 1) / this->mBlockSize;
-        }
-       for(int y = topBlkY; y <= bottomBlkY; y++) {
-            int i = y * this->mStageWidth + checkBlkX;
-            if(i < 0 || i >= this->mStageWidth * this->mStageHeight) {
-                continue;
-            }
-            if(this->GetColType(this->mStage[i]) == CollisionType::BLOCK) {
-                if(isRight) {
-                    double tmp = (checkBlkX * this->mBlockSize) - (rectWorld.x + hitBox.width);
-                    if(tmp < objNewVec.x) {
-                        objNewVec.x = tmp;
-                    }
-                } else {
-                    double tmp = ((checkBlkX + 1) * this->mBlockSize) - rectWorld.x;
-                    if(tmp > objNewVec.x) {
-                        objNewVec.x = tmp;
-                    }
-                }
-                break;
-            }
-        }
-        
-        int offSet = checkBlkY * this->mStageWidth;
-
-        if(rectNewWorld.y + hitBox.height >= this->mScreenHeight) {
-            objNewVec.y = this->mScreenHeight - (rectWorld.y + hitBox.height);
-            continue;
-        }
-
-        for(int x = leftBlkX; x <= rightBlkX; x++) {
-            int i = offSet + x;
-            if(i < 0 || i >= this->mStageWidth * this->mStageHeight) {
-                continue;
-            }
-            if(0 < this->mStage[i] && this->mStage[i] < 3) {
-                if(isFall) {
-                    double tmp = (checkBlkY * this->mBlockSize) - (rectWorld.y + hitBox.height);
-                    if(tmp < objNewVec.y) {
-                        objNewVec.y = tmp;
-                    }
-                } else {
-                    double tmp = ((checkBlkY + 1) * this->mBlockSize) - rectWorld.y;
-                    if(tmp > objNewVec.y) {
-                        objNewVec.y = tmp;
-                    }
-                }
-
-                break;
-            }
-        }
-    }
-
-    return objNewVec;
+    pObject->SetIsGround(hitGround);
+    pObject->SetIsWall(hitWall);
 }
 
-void Stage::CheckHitBlock(ObjectList& objectList) {
-    objectList.for_each([&](LinkedNode<ObjectListData>* node) {
-        Object* pObject = node->GetValue()->pObject;
-        Vector2d pos = pObject->GetPosition();
-        Vector2d vec = pObject->GetVector();
-        Vector2d newVec;
+void Stage::CheckHitBlock(Object *pObject) {
+    Vector2D vec = pObject->GetVector();
+    Vector2D pos = pObject->GetPosition();
+    Vector2D newVec;
 
-        newVec = this->AdjustVector(pObject);
+    newVec = AdjustVector(
+            pObject->GetCollider(),
+            pos,
+            vec,
+            this->mBlockSize,
+            this->mScreenWidth,
+            this->mScreenHeight,
+            &this->mStage,
+            this->mStageWidth,
+            this->mStageHeight);
 
-        bool hitGround = vec.y > newVec.y;
-        bool hitWall = (vec.x * newVec.x > 0 && abs(vec.x) > abs(newVec.x)) || vec.x * newVec.x < 0;
+    bool hitGround = vec.y > 0 && vec.y != newVec.y;
+    bool hitWall = vec.x != newVec.x;
 
-        //pObject->SetVector(newVec.x, newVec.y);
-        pObject->Translate(newVec.x, newVec.y);
-        pObject->SetVector(hitWall ? 0 : vec.x, hitGround ? 0 : vec.y);
+    pObject->Translate(hitWall ? newVec.x : 0, hitGround ? newVec.y : 0);
+    pObject->SetVector(hitWall ? 0 : newVec.x, hitGround ? 0 : newVec.y);
 
-        pObject->SetIsGround(hitGround);
-        pObject->SetIsWall(hitWall);
-    });
+    pObject->SetIsGround(hitGround);
+    pObject->SetIsWall(hitWall);
+
 }
 
 void Stage::Draw(OctGame* pOctGame, Camera* pCamera) {
     for(int y = 0; y < this->mScreenHeight && y < this->mScreenHeight / this->mBlockSize + 1; y++){
         for(int x = 0; x < this->mStageWidth && x < this->mScreenWidth / this->mBlockSize + 1; x++){
-            Vector2d cameraPos = pCamera->GetPosition();
+            Vector2D cameraPos = pCamera->GetPosition();
             int x1 = x * this->mBlockSize - static_cast<int>(cameraPos.x) % this->mBlockSize,
                 y1 = y * this->mBlockSize,
                 x2 = (x + 1) * this->mBlockSize - static_cast<int>(cameraPos.x) % this->mBlockSize,
@@ -205,13 +382,11 @@ void Stage::Draw(OctGame* pOctGame, Camera* pCamera) {
 
             if(idx < 0 || this->mStageWidth * this->mStageHeight <= idx) continue;
             switch(this->mStage[idx]){
-            case BLOCK_SOIL:
+            case BLOCK_ID::BID_SOIL:
                 pOctGame->DrawImage(g_ihandle_block_soil, x1, y1);
-//                pOctGame->DrawBox(x1, y1, x2, y2, 0x00FFFF, true);
                 break;
-            case BLOCK_STONE:
+            case BLOCK_ID::BID_STONE:
                 pOctGame->DrawImage(g_ihandle_block_stone, x1, y1);
-//                pOctGame->DrawBox(x1, y1, x2, y2, 0xFFFF00, true);
                 break;
             }
         }
