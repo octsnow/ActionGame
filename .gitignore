@@ -31,10 +31,6 @@
 *.out
 *.app
 
-# Image Files
-images/*
-*.bmp
-
 # Vim Backup Files
 *.cpp~
 *.hpp~

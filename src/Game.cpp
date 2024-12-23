@@ -42,8 +42,8 @@ namespace {
     UI g_ui;
     bool koma_mode = false;
 
-    void InitStageObjects(ObjectList *pObjectList, std::vector<STAGEOBJECTINFO> sois) {
-        for(STAGEOBJECTINFO soi : sois) {
+    void InitStageObjects(ObjectList *pObjectList, std::vector<STAGEOBJECTINFO> *pSois) {
+        for(STAGEOBJECTINFO soi : *pSois) {
             switch(soi.blockId) {
                 case BLOCK_ID::BID_GOAL:{
                     Goal *goal = new Goal();
@@ -52,7 +52,7 @@ namespace {
                     break;
                 }
                 default:
-                    printf("InitStageObjects: invalid block id\n");
+                    printf("InitStageObjects: invalid block id (%d)\n", soi.blockId);
                     break;
             }
         }
@@ -97,7 +97,7 @@ namespace {
             glClear(GL_COLOR_BUFFER_BIT);
             g_oct_game.ClearScreen();
 #ifndef OCT_DEBUG
-            g_oct_game.DrawBox(0, 0, SCREEN_W, SCREEN_H, 0x00AAAA, true);
+            g_oct_game.DrawBox(0, 0, SCREEN_W, SCREEN_H, 0xFFD7B2, true);
 #endif
             Update();
             g_sys_info.countTime -= FrameTime;
@@ -141,6 +141,7 @@ void Game::Init(int argc, char** argv) {
     g_oct_game.audio.SetVolume("Coin", 0.5);
     g_oct_game.audio.SetVolume("Cursor", 0.5);
 
+    /*
     // Initialize Enemy
     for(EnemyInitData data : enemyInitData) {
         switch(data.id) {
@@ -162,31 +163,32 @@ void Game::Init(int argc, char** argv) {
             break;
         }
     }
+    */
 
     // Initialize Flooting
     Flooting* flooting = new Flooting();
-    flooting->SetPosition(100, 200);
+    flooting->SetPosition(BLOCK_SIZE * 2, BLOCK_SIZE);
     g_object_list.AppendObject(flooting);
 
     // Initialize Coin
     Coin* coin;
     coin = new Coin();
-    coin->SetImageHandle(0, {
-        g_oct_game.LoadImageFile("assets/images/1-yen.bmp",
-        BLOCK_SIZE / 150.0f, BLOCK_SIZE / 150.0f)});
-    coin->SetSize(50, 50);
     coin->SetPosition(BLOCK_SIZE * 12, SCREEN_H - BLOCK_SIZE * 5);
     g_object_list.AppendObject(coin);
 
     // Initialize Player
     g_player = new Player();
+    g_player->SetPosition(BLOCK_SIZE, BLOCK_SIZE);
     g_player->SetGravity(GRAVITY);
     g_object_list.AppendObject(g_player);
 
     // Initialize Stage
     std::vector<STAGEOBJECTINFO> sois;
-    g_stage.LoadStage(&g_oct_game, "a.stg", BLOCK_SIZE, &sois);
-    InitStageObjects(&g_object_list, sois);
+    g_stage.Init(&g_oct_game);
+    //g_stage.LoadStage(&g_oct_game, "1_test.stg", BLOCK_SIZE, &sois);
+    g_stage.LoadStage(&g_oct_game, "2_test.stg", BLOCK_SIZE, &sois);
+    //g_stage.LoadStage(&g_oct_game, "test.stg", BLOCK_SIZE, &sois);
+    InitStageObjects(&g_object_list, &sois);
 
     // Initialize ObjecList
     g_object_list.for_each([&](LinkedNode<ObjectListData>* node) {

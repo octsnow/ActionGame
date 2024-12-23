@@ -330,8 +330,7 @@ void ObjectList::CheckHitObjects() const {
 void ObjectList::Update(OctGame* pOctGame, Stage *pStage) {
     this->mObjectList.for_each([&](LinkedNode<ObjectListData>* node) {
         Object* pObject = node->GetValue()->pObject;
-        pStage->CheckHitBlock(pObject);
-        pObject->UpdatePosition();
+        pStage->TranslateVector(pObject);
         pObject->enters.clear();
         pObject->stays.clear();
     });

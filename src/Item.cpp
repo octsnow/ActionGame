@@ -58,8 +58,12 @@ bool Item::CanPickup() const {
 }
 
 void Coin::Init(OctGame* pOctGame) {
-    Collider collider;
+    this->SetImageHandle(0, {
+        pOctGame->LoadImageFile("assets/images/coin.bmp",
+        50 / 150.0f, 50 / 150.0f, true)});
+    this->SetSize(50, 50);
 
+    Collider collider;
     collider.AddHitBox(0, 0, 50, 50, true);
     this->SetCollider(collider);
     this->SetColliderSet({0});

@@ -5,9 +5,16 @@ using namespace std;
 
 #pragma comment(lib, "BlockID.lib")
 
+#define BLOCK_CONVEYOR_SPEED 10
+
 namespace {
-    int g_ihandle_block_soil;
-    int g_ihandle_block_stone;
+    std::vector<string> gBlockImagePathes = {
+        "assets/images/blocks/stone.bmp",
+        "assets/images/blocks/soil.bmp",
+        "assets/images/blocks/conveyor_left.bmp",
+        "assets/images/blocks/conveyor_right.bmp",
+    };
+    std::vector<GHandle> gBlockGHandles;
 
     bool LineIsHitBlock(std::vector<BLOCK_ID> *stage, int sw, int sh, int blockSize, Vector2D pos, int length, bool isVertical) {
         if(isVertical) {
@@ -239,12 +246,130 @@ namespace {
         return newVec;
     }
 
+    void BlockGimmick(Stage *pStage, Object *pObject, int blockSize) {
+        Vector2D mostLeftPos, mostRightPos, mostBottomPos;
+        int mostLeftLength = 0, mostRightLength = 0, mostBottomLength = 0;
+
+        Vector2D p = pObject->GetPosition();
+        for(HitBox h : pObject->GetCollider().GetHitBoxes()) {
+            if(!h.isActive || !h.isPhysics) {
+                continue;
+            }
+
+            Vector2D leftPos(p.x + h.pos.x - 1, p.y + h.pos.y);
+            Vector2D rightPos(p.x + h.pos.x + h.width, p.y + h.pos.y);
+            Vector2D bottomPos(p.x + h.pos.x, p.y + h.pos.y + h.height);
+
+            if(mostLeftLength == 0 || mostLeftPos.x > leftPos.x) {
+                mostLeftPos.x = leftPos.x;
+                mostLeftPos.y = leftPos.y;
+                mostLeftLength = h.height;
+            }
+            if(mostRightLength == 0 || mostRightPos.x < rightPos.x) {
+                mostRightPos.x = rightPos.x;
+                mostRightPos.y = rightPos.y;
+                mostRightLength = h.height;
+            }
+            if(mostBottomLength == 0 || mostBottomPos.y < bottomPos.y) {
+                mostBottomPos.x = bottomPos.x;
+                mostBottomPos.y = bottomPos.y;
+                mostBottomLength = h.width;
+            }
+        }
+
+        bool blockFlags[BLOCK_ID::BID_NUM];
+        for(int i = 0; i < BLOCK_ID::BID_NUM; i++) {
+            blockFlags[i] = false;
+        }
+
+        if(pObject->IsGround() && mostBottomLength != 0) {
+            int s = (int)(mostBottomPos.x / blockSize);
+            int e = (int)((mostBottomPos.x + mostBottomLength - 1) / blockSize);
+            int y = mostBottomPos.y / blockSize;
+            for(int x = s; x <= e; x++) {
+                BLOCK_ID blockId = pStage->GetBlockID(x, y);
+                if(blockFlags[blockId]) {
+                    continue;
+                }
+                blockFlags[blockId] = true;
+
+                switch(blockId) {
+                    case BLOCK_ID::BID_CONVEYOR_LEFT: {
+                        Vector2D vec = pObject->GetVector();
+                        vec.x = -BLOCK_CONVEYOR_SPEED;
+                        pObject->SetVector(vec);
+                        break;
+                    }
+                    case BLOCK_ID::BID_CONVEYOR_RIGHT: {
+                        Vector2D vec = pObject->GetVector();
+                        vec.x = BLOCK_CONVEYOR_SPEED;
+                        pObject->SetVector(vec);
+                        break;
+                   }
+                    default:
+                        break;
+                }
+            }
+        }
+
+        for(int i = 0; i < BLOCK_ID::BID_NUM; i++) {
+            blockFlags[i] = false;
+        }
+
+        if(pObject->IsWall() && mostLeftLength != 0) {
+            int s = (int)(mostLeftPos.y / blockSize);
+            int e = (int)((mostLeftPos.y + mostLeftLength - 1) / blockSize);
+            int x = mostLeftPos.x / blockSize;
+            for(int y = s; y <= e; y++) {
+                BLOCK_ID blockId = pStage->GetBlockID(x, y);
+                if(blockFlags[blockId]) {
+                    continue;
+                }
+                switch(blockId) {
+                    default:
+                        break;
+                }
+            }
+        }
+
+        for(int i = 0; i < BLOCK_ID::BID_NUM; i++) {
+            blockFlags[i] = false;
+        }
+
+        if(pObject->IsWall() && mostRightLength != 0) {
+            int s = (int)(mostRightPos.y / blockSize);
+            int e = (int)((mostRightPos.y + mostRightLength - 1) / blockSize);
+            int x = mostRightPos.x / blockSize;
+            for(int y = s; y <= e; y++) {
+                BLOCK_ID blockId = pStage->GetBlockID(x, y);
+                if(blockFlags[blockId]) {
+                    continue;
+                }
+                switch(blockId) {
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
+    GHandle GetBlockGHandle(BLOCK_ID blockId) {
+        int i = blockId - 1;
+        if(i < 0 || i >= gBlockGHandles.size()) {
+            return -1;
+        }
+
+        return gBlockGHandles[i];
+    }
 };
 
-void Stage::LoadStage(OctGame* pOctGame, const string filepath, int blockSize, std::vector<STAGEOBJECTINFO> *outStageObjects) {
-    g_ihandle_block_soil = pOctGame->LoadImageFile("assets/images/blocks/soil.bmp", true);
-    g_ihandle_block_stone = pOctGame->LoadImageFile("assets/images/blocks/stone.bmp", true);
+void Stage::Init(OctGame *pOctGame) {
+    for(string path : gBlockImagePathes) {
+        gBlockGHandles.push_back(pOctGame->LoadImageFile(path, true));
+    }
+}
 
+void Stage::LoadStage(OctGame* pOctGame, const string filepath, int blockSize, std::vector<STAGEOBJECTINFO> *outStageObjects) {
     ifstream ifs(filepath);
 
     if(!ifs) {
@@ -341,9 +466,11 @@ void Stage::Translate(Object *pObject, Vector2D vec) {
 
     pObject->SetIsGround(hitGround);
     pObject->SetIsWall(hitWall);
+
+    BlockGimmick(this, pObject, this->mBlockSize);
 }
 
-void Stage::CheckHitBlock(Object *pObject) {
+void Stage::TranslateVector(Object *pObject) {
     Vector2D vec = pObject->GetVector();
     Vector2D pos = pObject->GetPosition();
     Vector2D newVec;
@@ -359,15 +486,16 @@ void Stage::CheckHitBlock(Object *pObject) {
             this->mStageWidth,
             this->mStageHeight);
 
+    pObject->SetVector(newVec);
+    pObject->UpdatePosition();
+
     bool hitGround = vec.y > 0 && vec.y != newVec.y;
     bool hitWall = vec.x != newVec.x;
-
-    pObject->Translate(hitWall ? newVec.x : 0, hitGround ? newVec.y : 0);
-    pObject->SetVector(hitWall ? 0 : newVec.x, hitGround ? 0 : newVec.y);
 
     pObject->SetIsGround(hitGround);
     pObject->SetIsWall(hitWall);
 
+    BlockGimmick(this, pObject, this->mBlockSize);
 }
 
 void Stage::Draw(OctGame* pOctGame, Camera* pCamera) {
@@ -381,14 +509,21 @@ void Stage::Draw(OctGame* pOctGame, Camera* pCamera) {
             int idx = y * this->mStageWidth + x + cameraPos.x / this->mBlockSize;
 
             if(idx < 0 || this->mStageWidth * this->mStageHeight <= idx) continue;
-            switch(this->mStage[idx]){
-            case BLOCK_ID::BID_SOIL:
-                pOctGame->DrawImage(g_ihandle_block_soil, x1, y1);
-                break;
-            case BLOCK_ID::BID_STONE:
-                pOctGame->DrawImage(g_ihandle_block_stone, x1, y1);
-                break;
+
+            GHandle gh = GetBlockGHandle(this->mStage[idx]);
+
+            if(gh >= 0) {
+                pOctGame->DrawImage(gh, x1, y1);
             }
         }
     }
+}
+
+BLOCK_ID Stage::GetBlockID(int x, int y) {
+    if(0 <= x && x < this->mStageWidth
+    && 0 <= y && y < this->mStageHeight) {
+        return this->mStage[y * this->mStageWidth + x];
+    }
+
+    return BLOCK_ID::BID_NONE;
 }

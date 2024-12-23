@@ -19,8 +19,9 @@ typedef struct stage_object_info_tag {
 
 class Stage {
 public:
-    void LoadStage(OctGame* pOctGame, const std::string filepath, int blockSize, std::vector<STAGEOBJECTINFO> *outStageObjects);
-    void SetStage(const int* stage, int width, int height, int blockSize, std::vector<STAGEOBJECTINFO> *outStageObjects);
+    void Init(OctGame *pOctGame);
+    void LoadStage(OctGame *pOctGame, const std::string filepath, int blockSize, std::vector<STAGEOBJECTINFO> *outStageObjects);
+    void SetStage(const int *stage, int width, int height, int blockSize, std::vector<STAGEOBJECTINFO> *outStageObjects);
     void SetScreenSize(int width, int height);
 
     int GetWidth();
@@ -28,8 +29,10 @@ public:
 	static CollisionType GetCollisionType(BLOCK_ID blockId);
 
     void Translate(Object *pObject, Vector2D vec);
-    void CheckHitBlock(Object *pObject);
+    void TranslateVector(Object *pObject);
     void Draw(OctGame* game, Camera* pCamera);
+
+    BLOCK_ID GetBlockID(int x, int y);
 
 private:
     std::vector<BLOCK_ID> mStage;

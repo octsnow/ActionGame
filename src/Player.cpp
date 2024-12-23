@@ -13,6 +13,7 @@
 #define HITBOX_BODY_OFFSET_X   ((100 - HITBOX_BODY_WIDTH) / 2.0)
 #define HITBOX_ATTACK_OFFSET_X (HITBOX_BODY_OFFSET_X + HITBOX_BODY_WIDTH)
 
+#define MOVE_SPEED_X 1
 #define MAX_SPEED_X 4
 #define MAX_SPEED_Y 50
 #define JUNP_SPEED 20
@@ -150,19 +151,23 @@ void Player::Damage() {
 }
 
 void Player::Left() {
-    this->AddVector(-1, 0);
     this->TurnLeft();
-    if(this->GetVector().x < -MAX_SPEED_X) {
-        this->SetVector(-MAX_SPEED_X, this->GetVector().y);
+    if(this->GetVector().x > -MAX_SPEED_X) {
+        this->AddVector(-MOVE_SPEED_X, 0);
+        if(this->GetVector().x < -MAX_SPEED_X) {
+            this->SetVector(-MAX_SPEED_X, this->GetVector().y);
+        }
     }
     this->SetAnimationNum(1);
 }
 
 void Player::Right() {
-    this->AddVector(1, 0);
     this->TurnRight();
-    if(this->GetVector().x > MAX_SPEED_X) {
-        this->SetVector(MAX_SPEED_X, this->GetVector().y);
+    if(this->GetVector().x < MAX_SPEED_X) {
+        this->AddVector(MOVE_SPEED_X, 0);
+        if(this->GetVector().x > MAX_SPEED_X) {
+            this->SetVector(MAX_SPEED_X, this->GetVector().y);
+        }
     }
     this->SetAnimationNum(1);
 }
