@@ -358,11 +358,11 @@ void ObjectList::Update(OctGame* pOctGame, Stage *pStage) {
                         &isWall);
 
                 Vector2D vec = pObject->GetVector();
-                if(isGround) {
+                if(isGround && vec.y * newVec.y < 0) {
                     vec.y = 0;
                     pObject->SetIsGround(isGround);
                 }
-                if(isWall) {
+                if(isWall && vec.x * newVec.x < 0) {
                     vec.x = 0;
                     pObject->SetIsWall(isWall);
                 }

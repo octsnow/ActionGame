@@ -19,3 +19,18 @@ public:
 private:
     bool mIsGoal;
 };
+
+class Leaser : public Object {
+public:
+    void Init(OctGame *pOctGame) override;
+    void Draw(OctGame *pOctGame, Camera *pCamera) override;
+    void StayObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) override;
+    void SetLeaserHeight(double height);
+    double GetLowestY() const;
+
+private:
+    double mDestinationY;
+    double mCurrentDestinationY;
+    double mLastDestinationY;
+    int mLeaserWidth;
+};

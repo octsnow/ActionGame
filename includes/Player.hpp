@@ -30,6 +30,8 @@ public:
 private:
     clock_t mAttackCountTime;
     bool mAttackFlag;
+    bool mIsHittingLeaser;
+    bool mLastIsHittingLeaser;
     int mHP;
     int mCoin;
     Gears mGears;

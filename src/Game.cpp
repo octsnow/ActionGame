@@ -45,7 +45,23 @@ namespace {
     void InitStageObjects(ObjectList *pObjectList, std::vector<STAGEOBJECTINFO> *pSois) {
         for(STAGEOBJECTINFO soi : *pSois) {
             switch(soi.blockId) {
-                case BLOCK_ID::BID_GOAL:{
+                case BLOCK_ID::BID_LEASER: {
+                    Leaser *leaser = new Leaser();
+                    leaser->SetPosition(soi.position);
+                    
+                    int x = soi.position.x / BLOCK_SIZE;
+                    int y = soi.position.y / BLOCK_SIZE;
+                    while(y < g_stage.GetHeight()) {
+                        if(Stage::GetCollisionType(g_stage.GetBlockID(x, y)) == CollisionType::BLOCK) {
+                            break;
+                        }
+                        y++;
+                    }
+                    leaser->SetLeaserHeight(y * BLOCK_SIZE - 1 - soi.position.y);
+                    pObjectList->AppendObject(leaser);
+                    break;
+                }
+                case BLOCK_ID::BID_GOAL: {
                     Goal *goal = new Goal();
                     goal->SetPosition(soi.position);
                     pObjectList->AppendObject(goal);
@@ -96,9 +112,9 @@ namespace {
         if(g_sys_info.countTime >= FrameTime) {
             glClear(GL_COLOR_BUFFER_BIT);
             g_oct_game.ClearScreen();
-#ifndef OCT_DEBUG
-            g_oct_game.DrawBox(0, 0, SCREEN_W, SCREEN_H, 0xFFD7B2, true);
-#endif
+//#ifndef OCT_DEBUG
+//            g_oct_game.DrawBox(0, 0, SCREEN_W, SCREEN_H, 0xFFD7B2, true);
+//#endif
             Update();
             g_sys_info.countTime -= FrameTime;
             g_oct_game.ScreenSwap();
@@ -186,7 +202,8 @@ void Game::Init(int argc, char** argv) {
     std::vector<STAGEOBJECTINFO> sois;
     g_stage.Init(&g_oct_game);
     //g_stage.LoadStage(&g_oct_game, "1_test.stg", BLOCK_SIZE, &sois);
-    g_stage.LoadStage(&g_oct_game, "2_test.stg", BLOCK_SIZE, &sois);
+    //g_stage.LoadStage(&g_oct_game, "2_test.stg", BLOCK_SIZE, &sois);
+    g_stage.LoadStage(&g_oct_game, "3_test.stg", BLOCK_SIZE, &sois);
     //g_stage.LoadStage(&g_oct_game, "test.stg", BLOCK_SIZE, &sois);
     InitStageObjects(&g_object_list, &sois);
 

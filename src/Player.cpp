@@ -1,5 +1,6 @@
 #include "Player.hpp"
 #include "Enemy.hpp"
+#include "Gimmick.hpp"
 
 #define HITBOX_BODY_WIDTH  45
 #define HITBOX_BODY_HEIGHT 100
@@ -80,6 +81,8 @@ void Player::Init(OctGame* pOctGame) {
     this->mHP = 100;
     this->mCoin = 0;
     this->mGears.Hat = ITEM_ID::ITEM_ID_NONE;
+    this->mIsHittingLeaser = true;
+    this->mLastIsHittingLeaser = true;
 }
 
 void Player::Update(OctGame* pOctGame) {
@@ -136,6 +139,9 @@ void Player::Update(OctGame* pOctGame) {
             this->mAttackFlag = false;
         }
     }
+
+    this->mLastIsHittingLeaser = this->mIsHittingLeaser;
+    this->mIsHittingLeaser = false;
 }
 
 void Player::Attack() {
@@ -230,7 +236,16 @@ void Player::StayObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetO
         } else if(pTargetObject->CompareTag("Coin")) {
             pOctGame->audio.Play("Coin");
             this->mCoin++;
+        } else if(pTargetObject->CompareTag("Leaser")) {
+            if(this->mLastIsHittingLeaser) {
+                const Leaser *pLeaser = dynamic_cast<const Leaser*>(pTargetObject);
+                if(pLeaser == nullptr) return;
+                if(pLeaser->GetLowestY() >= this->GetPosition().y + hitbox.pos.y - 1) {
+                    this->Damage();
+                }
+            }
+            this->mIsHittingLeaser = true;
         }
-    }
 
+    }
 }

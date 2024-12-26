@@ -54,3 +54,53 @@ void Goal::EnterObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetOb
 bool Goal::IsGoal() const {
     return this->mIsGoal;
 }
+
+void Leaser::Init(OctGame *pOctGame) {
+    this->SetImageHandle(0, {
+            pOctGame->LoadImageFile("assets/images/leaser.bmp", true)});
+    this->mLeaserWidth = 20;
+    Collider collider;
+    collider.AddHitBox(25 - this->mLeaserWidth / 2.0, 0, this->mLeaserWidth, 15, true);
+    collider.AddHitBox(25 - this->mLeaserWidth / 2.0, 0, this->mLeaserWidth, this->mDestinationY - this->mPosition.y, false);
+    this->SetCollider(collider);
+    this->SetColliderSet({0, 1});
+    this->SwitchCollider(0);
+    this->SetTag("Leaser");
+    this->SetWeight(10);
+    this->mCurrentDestinationY = this->mDestinationY;
+    this->mLastDestinationY = this->mDestinationY;
+}
+
+void Leaser::Draw(OctGame *pOctGame, Camera *pCamera) {
+    Object::Draw(pOctGame, pCamera);
+    HitBox h = this->GetCollider().GetHitBoxes()[0];
+    Vector2D p1 = pCamera->CalcViewPosition(this->GetPosition().x + h.pos.x, this->GetPosition().y + h.pos.y + 20);
+    Vector2D p2 = pCamera->CalcViewPosition(this->GetPosition().x + h.pos.x + h.width - 1, this->mCurrentDestinationY + 1);
+    pOctGame->DrawBox(
+            p1.x, p1.y,
+            p2.x, p2.y,
+            0xFFFFFF, true);
+
+    this->mLastDestinationY = this->mCurrentDestinationY;
+    this->mCurrentDestinationY = this->mDestinationY;
+}
+
+void Leaser::StayObject(OctGame* pOctGame, HitBox hitbox, const Object* pTargetObject, const HitBox* pTargetHitbox) {
+    if(pTargetHitbox->isPhysics) {
+        double newDestinationY = pTargetObject->GetPosition().y + pTargetHitbox->pos.y - 1;
+        if(this->mCurrentDestinationY > newDestinationY) {
+            this->mCurrentDestinationY = newDestinationY;
+        }
+    }
+}
+
+void Leaser::SetLeaserHeight(double height) {
+    if(height < 0) {
+        return;
+    }
+    this->mDestinationY = this->GetPosition().y + height;
+}
+
+double Leaser::GetLowestY() const {
+    return this->mLastDestinationY;
+}
